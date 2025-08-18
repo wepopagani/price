@@ -1184,11 +1184,12 @@
                     return;
                 }
                 
-                if (voce === 'TOTALE PRODUZIONE' || voce === 'PREZZO FINALE') {
-                    doc.setFont(undefined, 'bold');
-                } else {
-                    doc.setFont(undefined, 'normal');
-                }
+                // Rimuovi setFont che causava errori
+                // if (voce === 'TOTALE PRODUZIONE' || voce === 'PREZZO FINALE') {
+                //     doc.setFont(undefined, 'bold');
+                // } else {
+                //     doc.setFont(undefined, 'normal');
+                // }
                 
                 doc.text(voce, 20, y);
                 doc.text(importo, 140, y);
@@ -1198,7 +1199,7 @@
             // Profitto
             doc.setFontSize(12);
             doc.setTextColor(45, 80, 22);
-            doc.setFont(undefined, 'bold');
+            // doc.setFont(undefined, 'bold'); // Rimosso per evitare errori
             doc.text(`Profitto: ${result.profittoTotale.toFixed(2)} CHF`, 20, y + 10);
 
             // Footer
