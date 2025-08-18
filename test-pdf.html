@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PDF</title>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <h1>Test Generazione PDF</h1>
+    <button onclick="testPDF()">🧪 Test PDF</button>
+    <button onclick="checkLibrary()">🔍 Controlla Libreria</button>
+    
+    <div id="status" style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+        Clicca "Controlla Libreria" per verificare il caricamento di jsPDF
+    </div>
+
+    <script>
+        function checkLibrary() {
+            const status = document.getElementById('status');
+            let info = '<h3>Stato libreria jsPDF:</h3>';
+            
+            info += `<p><strong>window.jsPDF:</strong> ${typeof window.jsPDF}</p>`;
+            
+            if (window.jsPDF) {
+                info += `<p><strong>Proprietà:</strong> ${Object.keys(window.jsPDF).join(', ')}</p>`;
+                
+                if (window.jsPDF.jsPDF) {
+                    info += `<p><strong>jsPDF constructor:</strong> ${typeof window.jsPDF.jsPDF}</p>`;
+                    info += `<p style="color: green;">✅ Libreria caricata correttamente!</p>`;
+                } else {
+                    info += `<p style="color: orange;">⚠️ Struttura diversa del previsto</p>`;
+                }
+            } else {
+                info += `<p style="color: red;">❌ Libreria non trovata</p>`;
+            }
+            
+            status.innerHTML = info;
+        }
+        
+        function testPDF() {
+            try {
+                let jsPDFClass;
+                if (window.jsPDF && window.jsPDF.jsPDF) {
+                    jsPDFClass = window.jsPDF.jsPDF;
+                } else if (window.jsPDF) {
+                    jsPDFClass = window.jsPDF;
+                } else {
+                    throw new Error('jsPDF non trovato');
+                }
+                
+                const doc = new jsPDFClass();
+                doc.setFontSize(20);
+                doc.text('Test PDF - 3D Makes', 20, 20);
+                doc.setFontSize(12);
+                doc.text('Questo è un test di generazione PDF', 20, 40);
+                doc.text(`Data: ${new Date().toLocaleDateString('it-IT')}`, 20, 60);
+                
+                doc.save('test-3dmakes.pdf');
+                
+                document.getElementById('status').innerHTML = '<p style="color: green;">✅ PDF generato con successo!</p>';
+            } catch (error) {
+                document.getElementById('status').innerHTML = `<p style="color: red;">❌ Errore: ${error.message}</p>`;
+                console.error('Errore PDF:', error);
+            }
+        }
+        
+        // Auto-check dopo caricamento
+        window.addEventListener('load', function() {
+            setTimeout(checkLibrary, 500);
+        });
+    </script>
+</body>
+</html>

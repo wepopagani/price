@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Makes - Calcolatore Prezzi Stampa 3D</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
     <link rel="manifest" href="./manifest.webmanifest">
     <script>
         // Imposta qui l'endpoint remoto se disponibile (opzionale)
@@ -1013,11 +1013,24 @@
             }
         }
 
+        // Test libreria PDF
+        function testPDFLibrary() {
+            console.log('Testing PDF library...');
+            console.log('window.jsPDF:', typeof window.jsPDF);
+            if (window.jsPDF) {
+                console.log('jsPDF properties:', Object.keys(window.jsPDF));
+            }
+        }
+
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
             caricaImpostazioni();
             aggiornaOpzioni();
             aggiornaRiepilogoInfo();
+            
+            // Test PDF library dopo un breve delay
+            setTimeout(testPDFLibrary, 1000);
+            
             // Calcolo automatico iniziale dopo un breve delay per assicurarsi che tutto sia caricato
             setTimeout(function() {
                 if (document.getElementById('stampante').value && document.getElementById('materiale').value) {
@@ -1042,8 +1055,9 @@
 
         // Genera PDF del preventivo
         function generaPDF() {
-            if (typeof window.jsPDF === 'undefined') {
-                alert('Errore: libreria PDF non caricata');
+            // Verifica che jsPDF sia caricato
+            if (!window.jsPDF) {
+                alert('⚠️ Libreria PDF in caricamento...\nRiprova tra un momento.');
                 return;
             }
 
@@ -1051,12 +1065,22 @@
             const result = calculateForQuantity(quantita);
             
             if (!result) {
-                alert('Calcola prima il preventivo');
+                alert('❌ Calcola prima il preventivo');
                 return;
             }
 
-            const { jsPDF } = window.jsPDF;
-            const doc = new jsPDF();
+            // Accesso sicuro a jsPDF
+            let jsPDFClass;
+            if (window.jsPDF && window.jsPDF.jsPDF) {
+                jsPDFClass = window.jsPDF.jsPDF;
+            } else if (window.jsPDF) {
+                jsPDFClass = window.jsPDF;
+            } else {
+                alert('❌ Errore nel caricamento della libreria PDF');
+                return;
+            }
+            
+            const doc = new jsPDFClass();
 
             // Header
             doc.setFontSize(20);
