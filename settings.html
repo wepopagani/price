@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - 3D Makes Calcolatore</title>
+    <script>
+        // Imposta qui l'endpoint remoto se disponibile (opzionale)
+        // window.SETTINGS_ENDPOINT = 'https://tuo-dominio/api/settings';
+    </script>
+    <script src="./assets/js/settings-store.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: black;
+            line-height: 1.4;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            background: white;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-right: 30px;
+        }
+
+        .main-title {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+            flex: 1;
+        }
+
+        .back-btn {
+            background: #333;
+            color: white;
+            border: 2px solid #333;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .back-btn:hover {
+            background: #f58220;
+            border-color: #f58220;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            border: 1px solid #ccc;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: #333;
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-content {
+            padding: 20px;
+            background: white;
+        }
+
+        .subsection-header {
+            background: #f58220;
+            color: white;
+            padding: 10px 15px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: -20px -20px 20px -20px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 150px 1fr 120px;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 6px;
+        }
+
+        .form-row input, .form-row select {
+            padding: 8px 12px;
+            border: 2px solid #333;
+            background: white;
+            font-size: 14px;
+            color: black;
+            border-radius: 4px;
+        }
+
+        .form-row label {
+            font-weight: 600;
+            color: black;
+            font-size: 14px;
+        }
+
+        .btn {
+            background: #f58220;
+            color: white;
+            border: 2px solid #f58220;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #333;
+            border-color: #333;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            border-color: #c82333;
+        }
+
+        .add-form {
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .add-form input, .add-form select {
+            margin-bottom: 10px;
+        }
+
+        .save-section {
+            background: #e8f5e8;
+            border: 2px solid #27ae60;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .save-btn {
+            background: #27ae60;
+            color: white;
+            border: 3px solid #27ae60;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 8px;
+            letter-spacing: 1px;
+        }
+
+        .save-btn:hover {
+            background: #2d5016;
+            border-color: #2d5016;
+        }
+
+        .discount-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .discount-item {
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            background: #f8f9fa;
+        }
+
+        .discount-item label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .discount-item input {
+            width: 80px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .params-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .param-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+
+        .param-item label {
+            font-weight: bold;
+            min-width: 120px;
+        }
+
+        .param-item input {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .params-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .discount-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">3D Makes</div>
+            <div class="main-title">Impostazioni Calcolatore</div>
+            <button class="back-btn" onclick="window.close()">
+                ← Torna al Calcolatore
+            </button>
+        </div>
+
+        <div class="content">
+            <div class="section">
+                <div class="section-header">Endpoint Remoto (Opzionale)</div>
+                <div class="section-content">
+                    <div class="param-item" style="display:flex; align-items:center; gap:10px;">
+                        <label style="min-width: 180px; font-weight: bold;">URL API Settings:</label>
+                        <input id="remoteEndpoint" type="url" placeholder="https://dominio/api/settings" style="flex:1; padding: 8px 12px; border:2px solid #333; border-radius:4px;">
+                        <button class="btn" onclick="salvaEndpoint()">Salva</button>
+                    </div>
+                    <p style="margin-top:8px; font-size:12px; color:#666;">Se impostato, le impostazioni verranno lette/salvate su questo endpoint con fallback al browser.</p>
+                </div>
+            </div>
+            <!-- MATERIALI -->
+            <div class="section">
+                <div class="section-header">Gestione Materiali</div>
+                <div class="section-content">
+                    <div class="subsection-header">Materiali Disponibili</div>
+                    <div id="materialiList"></div>
+                    
+                    <div class="add-form">
+                        <h4>Aggiungi Nuovo Materiale</h4>
+                        <input type="text" id="newMaterialName" placeholder="Nome materiale (es. PETG Premium)" style="width: 100%; margin-bottom: 10px;">
+                        <div style="display: flex; gap: 10px;">
+                            <select id="newMaterialType" style="flex: 1;">
+                                <option value="FDM">FDM</option>
+                                <option value="Resina">Resina</option>
+                            </select>
+                            <input type="number" id="newMaterialPrice" placeholder="Prezzo CHF/kg" style="flex: 1;" step="0.1" min="0">
+                            <button class="btn" onclick="aggiungiMateriale()">Aggiungi</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STAMPANTI -->
+            <div class="section">
+                <div class="section-header">Gestione Stampanti</div>
+                <div class="section-content">
+                    <div class="subsection-header">Stampanti Disponibili</div>
+                    <div id="stampantiList"></div>
+                    
+                    <div class="add-form">
+                        <h4>Aggiungi Nuova Stampante</h4>
+                        <input type="text" id="newPrinterName" placeholder="Nome stampante" style="width: 100%; margin-bottom: 10px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr; gap: 10px;">
+                            <select id="newPrinterType">
+                                <option value="FDM">FDM</option>
+                                <option value="Resina">Resina</option>
+                            </select>
+                            <input type="number" id="newPrinterPrice" placeholder="Prezzo CHF" min="0">
+                            <input type="number" id="newPrinterService" placeholder="Service CHF" min="0">
+                            <input type="number" id="newPrinterLife" placeholder="Ore vita" min="1">
+                            <input type="number" id="newPrinterWatt" placeholder="Watt" min="1">
+                        </div>
+                        <button class="btn" onclick="aggiungiStampante()" style="margin-top: 10px;">Aggiungi</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PARAMETRI GENERALI -->
+            <div class="section">
+                <div class="section-header">Parametri Generali</div>
+                <div class="section-content">
+                    <div class="subsection-header">Costi e Percentuali</div>
+                    <div class="params-grid">
+                        <div class="param-item">
+                            <label>Failure Rate (%):</label>
+                            <input type="number" id="failureRate" min="0" max="100" step="1">
+                        </div>
+                        <div class="param-item">
+                            <label>Costo Manodopera (CHF/h):</label>
+                            <input type="number" id="costoManodopera" min="0" step="1">
+                        </div>
+                        <div class="param-item">
+                            <label>Costo Elettricità (CHF/kWh):</label>
+                            <input type="number" id="costoElettricita" min="0" step="0.01">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCONTI QUANTITÀ -->
+            <div class="section">
+                <div class="section-header">Sconti per Quantità</div>
+                <div class="section-content">
+                    <div class="subsection-header">Percentuali di Sconto Personalizzate</div>
+                    <div class="discount-grid" id="scontiGrid"></div>
+                    
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn" onclick="aggiungiScontoQuantita()">+ Aggiungi Nuova Quantità</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SALVA -->
+            <div class="save-section">
+                <h3>Salvare le Impostazioni</h3>
+                <p style="margin: 10px 0;">Le modifiche verranno salvate nel browser e applicate al calcolatore.</p>
+                <button class="save-btn" onclick="salvaImpostazioni()">💾 SALVA TUTTO</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dati di default
+        let settings = {
+            stampanti: {
+                "Bambu Lab P1S": {"tipo": "FDM", "prezzo": 650, "service": 200, "vita": 5000, "watt": 150},
+                "Bambu Lab A1": {"tipo": "FDM", "prezzo": 450, "service": 50, "vita": 4000, "watt": 120},
+                "Bambu Lab A1 Mini": {"tipo": "FDM", "prezzo": 250, "service": 50, "vita": 4000, "watt": 80},
+                "Elegoo Mars 5 Ultra": {"tipo": "Resina", "prezzo": 400, "service": 50, "vita": 3500, "watt": 30},
+                "Elegoo Saturn 4 Ultra": {"tipo": "Resina", "prezzo": 500, "service": 100, "vita": 4000, "watt": 50}
+            },
+            materiali: {
+                "Creality PLA": {"tipo": "FDM", "prezzo": 20},
+                "Bambu PLA": {"tipo": "FDM", "prezzo": 22},
+                "eSUN PLA": {"tipo": "FDM", "prezzo": 16},
+                "eSUN PETG": {"tipo": "FDM", "prezzo": 20},
+                "Sunlu PLA": {"tipo": "FDM", "prezzo": 20},
+                "Sunlu PETG": {"tipo": "FDM", "prezzo": 22},
+                "Elegoo Resin": {"tipo": "Resina", "prezzo": 25}
+            },
+            impostazioni: {
+                failureRate: 10,
+                costoManodopera: 30,
+                costoElettricita: 0.30,
+                scontiQuantita: {
+                    1: 0,
+                    10: 5,
+                    20: 10,
+                    50: 15,
+                    100: 20
+                }
+            }
+        };
+
+        // Carica impostazioni dal localStorage
+        function caricaImpostazioni() {
+            try {
+                const saved = localStorage.getItem('3dmakes_settings');
+                if (saved) {
+                    settings = JSON.parse(saved);
+                }
+            } catch (e) {
+                console.log('Errore nel caricamento');
+            }
+            
+            aggiornaInterfaccia();
+        }
+
+        // Aggiorna l'interfaccia con i dati caricati
+        function aggiornaInterfaccia() {
+            renderMateriali();
+            renderStampanti();
+            renderParametri();
+            renderSconti();
+        }
+
+        // Renderizza la lista dei materiali
+        function renderMateriali() {
+            const container = document.getElementById('materialiList');
+            container.innerHTML = '';
+            
+            Object.keys(settings.materiali).forEach(nome => {
+                const mat = settings.materiali[nome];
+                const div = document.createElement('div');
+                div.className = 'form-row';
+                div.innerHTML = `
+                    <label>${nome}</label>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span style="padding: 8px; background: #f0f0f0; border-radius: 4px; font-weight: bold;">
+                            ${mat.tipo}
+                        </span>
+                        <input type="number" value="${mat.prezzo}" step="0.1" min="0" 
+                               onchange="settings.materiali['${nome}'].prezzo = parseFloat(this.value)">
+                        <span>CHF/${mat.tipo === 'FDM' ? 'kg' : 'litro'}</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="rimuoviMateriale('${nome}')">Rimuovi</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Renderizza la lista delle stampanti
+        function renderStampanti() {
+            const container = document.getElementById('stampantiList');
+            container.innerHTML = '';
+            
+            Object.keys(settings.stampanti).forEach(nome => {
+                const stamp = settings.stampanti[nome];
+                const div = document.createElement('div');
+                div.className = 'form-row';
+                div.style.gridTemplateColumns = '150px 1fr 1fr 1fr 1fr 1fr 120px';
+                div.innerHTML = `
+                    <label>${nome}</label>
+                    <span style="padding: 8px; background: #f0f0f0; border-radius: 4px; font-weight: bold; text-align: center;">
+                        ${stamp.tipo}
+                    </span>
+                    <input type="number" value="${stamp.prezzo}" min="0" 
+                           onchange="settings.stampanti['${nome}'].prezzo = parseInt(this.value)" placeholder="Prezzo">
+                    <input type="number" value="${stamp.service}" min="0" 
+                           onchange="settings.stampanti['${nome}'].service = parseInt(this.value)" placeholder="Service">
+                    <input type="number" value="${stamp.vita}" min="1" 
+                           onchange="settings.stampanti['${nome}'].vita = parseInt(this.value)" placeholder="Vita">
+                    <input type="number" value="${stamp.watt}" min="1" 
+                           onchange="settings.stampanti['${nome}'].watt = parseInt(this.value)" placeholder="Watt">
+                    <button class="btn btn-danger" onclick="rimuoviStampante('${nome}')">Rimuovi</button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Renderizza i parametri generali
+        function renderParametri() {
+            document.getElementById('failureRate').value = settings.impostazioni.failureRate;
+            document.getElementById('costoManodopera').value = settings.impostazioni.costoManodopera;
+            document.getElementById('costoElettricita').value = settings.impostazioni.costoElettricita;
+        }
+
+        // Renderizza gli sconti quantità
+        function renderSconti() {
+            const container = document.getElementById('scontiGrid');
+            container.innerHTML = '';
+            
+            Object.keys(settings.impostazioni.scontiQuantita).forEach(qty => {
+                const sconto = settings.impostazioni.scontiQuantita[qty];
+                const div = document.createElement('div');
+                div.className = 'discount-item';
+                div.innerHTML = `
+                    <label>${qty} pezzi</label>
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+                        <input type="number" value="${sconto}" min="0" max="100" step="1" 
+                               onchange="settings.impostazioni.scontiQuantita[${qty}] = parseInt(this.value)">
+                        <span>%</span>
+                    </div>
+                    ${qty != 1 ? `<button class="btn btn-danger" style="margin-top: 10px; font-size: 10px;" onclick="rimuoviScontoQuantita(${qty})">Rimuovi</button>` : ''}
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Funzioni per aggiungere elementi
+        function aggiungiMateriale() {
+            const nome = document.getElementById('newMaterialName').value.trim();
+            const tipo = document.getElementById('newMaterialType').value;
+            const prezzo = parseFloat(document.getElementById('newMaterialPrice').value);
+            
+            if (!nome || !prezzo || prezzo <= 0) {
+                alert('Inserisci nome e prezzo validi');
+                return;
+            }
+            
+            if (settings.materiali[nome]) {
+                alert('Materiale già esistente');
+                return;
+            }
+            
+            settings.materiali[nome] = { tipo, prezzo };
+            
+            // Reset form
+            document.getElementById('newMaterialName').value = '';
+            document.getElementById('newMaterialPrice').value = '';
+            
+            renderMateriali();
+        }
+
+        function aggiungiStampante() {
+            const nome = document.getElementById('newPrinterName').value.trim();
+            const tipo = document.getElementById('newPrinterType').value;
+            const prezzo = parseInt(document.getElementById('newPrinterPrice').value);
+            const service = parseInt(document.getElementById('newPrinterService').value);
+            const vita = parseInt(document.getElementById('newPrinterLife').value);
+            const watt = parseInt(document.getElementById('newPrinterWatt').value);
+            
+            if (!nome || !prezzo || !service || !vita || !watt) {
+                alert('Compila tutti i campi');
+                return;
+            }
+            
+            if (settings.stampanti[nome]) {
+                alert('Stampante già esistente');
+                return;
+            }
+            
+            settings.stampanti[nome] = { tipo, prezzo, service, vita, watt };
+            
+            // Reset form
+            document.getElementById('newPrinterName').value = '';
+            document.getElementById('newPrinterPrice').value = '';
+            document.getElementById('newPrinterService').value = '';
+            document.getElementById('newPrinterLife').value = '';
+            document.getElementById('newPrinterWatt').value = '';
+            
+            renderStampanti();
+        }
+
+        function aggiungiScontoQuantita() {
+            const qty = prompt('Inserisci la quantità (numero di pezzi):');
+            if (!qty || isNaN(qty) || qty <= 0) return;
+            
+            const sconto = prompt('Inserisci la percentuale di sconto (0-100):');
+            if (sconto === null || isNaN(sconto) || sconto < 0 || sconto > 100) return;
+            
+            settings.impostazioni.scontiQuantita[parseInt(qty)] = parseInt(sconto);
+            renderSconti();
+        }
+
+        // Funzioni per rimuovere elementi
+        function rimuoviMateriale(nome) {
+            if (confirm(`Rimuovere il materiale "${nome}"?`)) {
+                delete settings.materiali[nome];
+                renderMateriali();
+            }
+        }
+
+        function rimuoviStampante(nome) {
+            if (confirm(`Rimuovere la stampante "${nome}"?`)) {
+                delete settings.stampanti[nome];
+                renderStampanti();
+            }
+        }
+
+        function rimuoviScontoQuantita(qty) {
+            if (confirm(`Rimuovere lo sconto per ${qty} pezzi?`)) {
+                delete settings.impostazioni.scontiQuantita[qty];
+                renderSconti();
+            }
+        }
+
+        // Salva le impostazioni
+        function salvaImpostazioni() {
+            // Aggiorna i parametri generali
+            settings.impostazioni.failureRate = parseInt(document.getElementById('failureRate').value);
+            settings.impostazioni.costoManodopera = parseInt(document.getElementById('costoManodopera').value);
+            settings.impostazioni.costoElettricita = parseFloat(document.getElementById('costoElettricita').value);
+            
+            if (window.SettingsStore && typeof window.SettingsStore.saveSettings === 'function') {
+                window.SettingsStore.saveSettings(settings).then((res) => {
+                    const where = res.remote ? 'server remoto' : 'browser';
+                    alert(`✅ Impostazioni salvate con successo nel ${where}!\n\nRicarica il calcolatore per vedere i cambiamenti.`);
+                }).catch(() => {
+                    alert('❌ Errore nel salvataggio delle impostazioni');
+                });
+            } else {
+                try {
+                    localStorage.setItem('3dmakes_settings', JSON.stringify(settings));
+                    alert('✅ Impostazioni salvate con successo!\n\nRicarica il calcolatore per vedere i cambiamenti.');
+                } catch (e) {
+                    alert('❌ Errore nel salvataggio delle impostazioni');
+                }
+            }
+        }
+
+        function salvaEndpoint() {
+            const url = (document.getElementById('remoteEndpoint').value || '').trim();
+            if (url && !url.startsWith('http')) {
+                alert('Inserisci un URL valido che inizi con http o https');
+                return;
+            }
+            if (url) {
+                localStorage.setItem('3dmakes_settings_endpoint', url);
+                alert('✅ Endpoint remoto salvato');
+            } else {
+                localStorage.removeItem('3dmakes_settings_endpoint');
+                alert('ℹ️ Endpoint rimosso: verrà usato solo il browser');
+            }
+        }
+
+        // Inizializza la pagina
+        document.addEventListener('DOMContentLoaded', function() {
+            // Precarica eventuale endpoint esistente
+            const savedEndpoint = localStorage.getItem('3dmakes_settings_endpoint') || '';
+            document.getElementById('remoteEndpoint').value = savedEndpoint;
+
+            caricaImpostazioni();
+        });
+    </script>
+</body>
+</html> 

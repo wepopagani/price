@@ -1,0 +1,14 @@
+# Dipendenze del server (opzionale)
+server/node_modules/
+server/data/
+
+# File di sistema
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Log
+*.log
