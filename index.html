@@ -5,13 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Makes - Calcolatore Prezzi Stampa 3D</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="./assets/js/jspdf.min.js"></script>
     <script>
-        // Aspetta che jsPDF sia caricato
+        // Verifica che jsPDF sia caricato
         window.addEventListener('load', function() {
             console.log('jsPDF status:', typeof window.jsPDF);
             if (window.jsPDF) {
                 console.log('jsPDF keys:', Object.keys(window.jsPDF));
+                console.log('✅ PDF library loaded successfully!');
+            } else {
+                console.error('❌ PDF library failed to load');
             }
         });
     </script>
