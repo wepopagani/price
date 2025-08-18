@@ -5,7 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Makes - Calcolatore Prezzi Stampa 3D</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Aspetta che jsPDF sia caricato
+        window.addEventListener('load', function() {
+            console.log('jsPDF status:', typeof window.jsPDF);
+            if (window.jsPDF) {
+                console.log('jsPDF keys:', Object.keys(window.jsPDF));
+            }
+        });
+    </script>
     <link rel="manifest" href="./manifest.webmanifest">
     <script>
         // Imposta qui l'endpoint remoto se disponibile (opzionale)
@@ -1075,6 +1084,9 @@
 
         // Genera PDF del preventivo
         function generaPDF() {
+            console.log('Generating PDF...');
+            console.log('window.jsPDF:', window.jsPDF);
+            
             const quantita = parseInt(document.getElementById('quantita').value);
             const result = calculateForQuantity(quantita);
             
@@ -1083,14 +1095,24 @@
                 return;
             }
 
-            if (!window.jsPDF) {
-                alert('❌ Libreria PDF non disponibile');
+            // Controllo robusto per jsPDF
+            let doc;
+            try {
+                if (window.jsPDF && window.jsPDF.jsPDF) {
+                    // Versione UMD
+                    doc = new window.jsPDF.jsPDF();
+                } else if (window.jsPDF) {
+                    // Versione diretta
+                    doc = new window.jsPDF();
+                } else {
+                    alert('❌ Libreria PDF non caricata');
+                    return;
+                }
+            } catch (e) {
+                console.error('Errore creazione jsPDF:', e);
+                alert('❌ Errore nell\'inizializzazione PDF');
                 return;
             }
-
-            try {
-                const { jsPDF } = window.jsPDF;
-                const doc = new jsPDF();
 
             // Header
             doc.setFontSize(20);
@@ -1181,13 +1203,15 @@
             doc.setTextColor(150, 150, 150);
             doc.text('Preventivo generato da 3D Makes - Calcolatore Prezzi', 20, 280);
 
-            // Salva il PDF
-            const nomeFile = `Preventivo_3DMakes_${quantita}pz_${dataOggi.replace(/\//g, '-')}.pdf`;
-            doc.save(nomeFile);
-            
+            try {
+                // Salva il PDF
+                const nomeFile = `Preventivo_3DMakes_${quantita}pz_${dataOggi.replace(/\//g, '-')}.pdf`;
+                doc.save(nomeFile);
+                console.log('PDF salvato:', nomeFile);
+                
             } catch (error) {
-                console.error('Errore generazione PDF:', error);
-                alert('❌ Errore durante la generazione del PDF');
+                console.error('Errore salvataggio PDF:', error);
+                alert('❌ Errore durante il salvataggio del PDF');
             }
         }
     </script>
