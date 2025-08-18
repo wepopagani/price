@@ -1,6 +1,11 @@
-# Dipendenze del server (opzionale)
+# Dipendenze del server Node (opzionale)
 server/node_modules/
 server/data/
+
+# File di build e cache
+dist/
+build/
+.cache/
 
 # File di sistema
 .DS_Store
@@ -12,3 +17,7 @@ Thumbs.db
 
 # Log
 *.log
+npm-debug.log*
+
+# Netlify
+.netlify/

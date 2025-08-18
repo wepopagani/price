@@ -12,6 +12,8 @@ Avvia una piccola API Node per leggere/salvare le impostazioni da remoto e usarl
 
 ## Backend Settings API (opzionale)
 
+**Solo se vuoi condividere impostazioni tra dispositivi:**
+
 1. Assicurati di avere Node 18+
 2. Installa e avvia il server:
    ```bash
@@ -20,6 +22,8 @@ Avvia una piccola API Node per leggere/salvare le impostazioni da remoto e usarl
    npm start
    ```
 3. L'API espone `GET/PUT /api/settings`
+
+**Nota**: Il frontend funziona completamente senza backend - è 100% statico!
 
 ## Configurazione frontend per endpoint remoto
 
