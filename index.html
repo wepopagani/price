@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D Makes - Calcolatore Prezzi Stampa 3D</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js" crossorigin="anonymous"></script>
     <link rel="manifest" href="./manifest.webmanifest">
     <script>
         // Imposta qui l'endpoint remoto se disponibile (opzionale)
@@ -1074,7 +1074,7 @@
         }
 
         // Genera PDF del preventivo
-        async function generaPDF() {
+        function generaPDF() {
             const quantita = parseInt(document.getElementById('quantita').value);
             const result = calculateForQuantity(quantita);
             
@@ -1083,15 +1083,12 @@
                 return;
             }
 
-            // Carica jsPDF se necessario
-            const isLoaded = await loadJsPDF();
-            if (!isLoaded || !window.jsPDF) {
-                alert('❌ Impossibile caricare la libreria PDF.\nVerifica la connessione internet.');
+            if (!window.jsPDF) {
+                alert('❌ Libreria PDF non disponibile');
                 return;
             }
 
             try {
-                // Accesso sicuro a jsPDF
                 const { jsPDF } = window.jsPDF;
                 const doc = new jsPDF();
 
@@ -1184,13 +1181,13 @@
             doc.setTextColor(150, 150, 150);
             doc.text('Preventivo generato da 3D Makes - Calcolatore Prezzi', 20, 280);
 
-                // Salva il PDF
-                const nomeFile = `Preventivo_3DMakes_${quantita}pz_${dataOggi.replace(/\//g, '-')}.pdf`;
-                doc.save(nomeFile);
-                
+            // Salva il PDF
+            const nomeFile = `Preventivo_3DMakes_${quantita}pz_${dataOggi.replace(/\//g, '-')}.pdf`;
+            doc.save(nomeFile);
+            
             } catch (error) {
                 console.error('Errore generazione PDF:', error);
-                alert('❌ Errore durante la generazione del PDF.\nDettagli in console (F12).');
+                alert('❌ Errore durante la generazione del PDF');
             }
         }
     </script>
