@@ -38,18 +38,19 @@
             status.innerHTML = info;
         }
         
-        function testPDF() {
+        async function testPDF() {
             try {
-                let jsPDFClass;
-                if (window.jsPDF && window.jsPDF.jsPDF) {
-                    jsPDFClass = window.jsPDF.jsPDF;
-                } else if (window.jsPDF) {
-                    jsPDFClass = window.jsPDF;
-                } else {
-                    throw new Error('jsPDF non trovato');
+                if (!window.jsPDF) {
+                    document.getElementById('status').innerHTML = '<p style="color: orange;">⏳ Caricamento libreria PDF...</p>';
+                    await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 
-                const doc = new jsPDFClass();
+                if (!window.jsPDF) {
+                    throw new Error('jsPDF non caricato');
+                }
+                
+                const { jsPDF } = window.jsPDF;
+                const doc = new jsPDF();
                 doc.setFontSize(20);
                 doc.text('Test PDF - 3D Makes', 20, 20);
                 doc.setFontSize(12);
