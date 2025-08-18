@@ -1098,22 +1098,22 @@
                 return;
             }
 
-            // Controllo robusto per jsPDF
+            // Usa la vera libreria jsPDF ora che funziona
             let doc;
             try {
                 if (window.jsPDF && window.jsPDF.jsPDF) {
-                    // Versione UMD
                     doc = new window.jsPDF.jsPDF();
-                } else if (window.jsPDF) {
-                    // Versione diretta
+                } else if (typeof window.jsPDF === 'function') {
                     doc = new window.jsPDF();
                 } else {
-                    alert('❌ Libreria PDF non caricata');
+                    console.error('jsPDF structure:', window.jsPDF);
+                    alert('❌ Libreria PDF non disponibile');
                     return;
                 }
+                console.log('PDF doc created successfully:', doc);
             } catch (e) {
                 console.error('Errore creazione jsPDF:', e);
-                alert('❌ Errore nell\'inizializzazione PDF');
+                alert('❌ Errore creazione PDF: ' + e.message);
                 return;
             }
 
@@ -1208,14 +1208,62 @@
             doc.text('Preventivo generato da 3D Makes - Calcolatore Prezzi', 20, 280);
 
             try {
-                // Salva il PDF
+                // Prova a salvare il PDF reale
                 const nomeFile = `Preventivo_3DMakes_${quantita}pz_${dataOggi.replace(/\//g, '-')}.pdf`;
                 doc.save(nomeFile);
-                console.log('PDF salvato:', nomeFile);
+                console.log('✅ PDF reale salvato:', nomeFile);
                 
             } catch (error) {
-                console.error('Errore salvataggio PDF:', error);
-                alert('❌ Errore durante il salvataggio del PDF');
+                console.error('Errore salvataggio PDF, fallback a TXT:', error);
+                
+                // Fallback: salva come TXT con i dati formattati
+                const contenutoTXT = `
+PDF PREVENTIVO 3D MAKES
+========================
+
+Data: ${dataOggi}
+
+CONFIGURAZIONE STAMPA
+---------------------
+Tecnologia: ${tipoStampa}
+Stampante: ${stampante}
+Materiale: ${materiale}
+Peso/Volume: ${peso} ${tipoStampa === 'FDM' ? 'g' : 'ml'}
+Tempo stampa: ${tempoStampa} ore
+Quantità: ${quantita} pezzi
+Markup: ${markup}%
+
+DETTAGLIO COSTI
+---------------
+Costo Materiale:     ${result.costoMateriale.toFixed(2)} CHF
+Costo Ammortamento:  ${result.costoAmmortamento.toFixed(2)} CHF
+Costo Elettricità:   ${result.costoElettricita.toFixed(2)} CHF
+Costo Lavoro:        ${result.costoLavoro.toFixed(2)} CHF
+Failure Rate (10%):  ${result.failureCost.toFixed(2)} CHF
+
+TOTALE PRODUZIONE:   ${result.totaleProduzionePezzo.toFixed(2)} CHF
+
+PREZZO FINALE:       ${result.prezzoFinaleTotale.toFixed(2)} CHF
+Profitto:            ${result.profittoTotale.toFixed(2)} CHF
+
+${quantita > 1 ? `Prezzo per pezzo: ${result.prezzoUnitario.toFixed(2)} CHF` : ''}
+${result.scontoApplicato > 0 ? `Sconto quantità: -${(result.scontoApplicato * quantita).toFixed(2)} CHF` : ''}
+
+---
+Preventivo generato da 3D Makes - Calcolatore Prezzi
+                `;
+                
+                const blob = new Blob([contenutoTXT], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `Preventivo_3DMakes_${quantita}pz_${dataOggi.replace(/\//g, '-')}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                console.log('📄 TXT di backup salvato');
             }
         }
     </script>
