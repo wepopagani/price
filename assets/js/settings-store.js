@@ -3,7 +3,7 @@
 
  Priorità:
  1) Endpoint REST remoto (window.SETTINGS_ENDPOINT) con API:
-    - GET  {endpoint} -> { stampanti, materiali, impostazioni }
+    - GET  {endpoint} -> { stampanti, impostazioni }
     - PUT  {endpoint} body JSON identico
  2) localStorage fallback (chiave '3dmakes_settings')
 
@@ -61,9 +61,8 @@
       function mergeWithDefaults(source, base) {
         const out = { ...base };
         if (source && typeof source === 'object') {
-          // stampanti/materiali: usa source solo se ha almeno 1 chiave
+          // stampanti: usa source solo se ha almeno 1 chiave
           out.stampanti = source.stampanti && Object.keys(source.stampanti).length ? source.stampanti : base.stampanti;
-          out.materiali = source.materiali && Object.keys(source.materiali).length ? source.materiali : base.materiali;
           // impostazioni: merge per chiavi note
           out.impostazioni = { ...base.impostazioni, ...(source.impostazioni || {}) };
         }

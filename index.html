@@ -434,8 +434,18 @@
                         </div>
 
                         <div class="form-row">
-                            <label for="materiale">Materiale:</label>
-                            <select id="materiale"></select>
+                            <label for="materiale">Prezzo Materiale:</label>
+                            <select id="materiale">
+                                <option value="15">15 CHF/kg</option>
+                                <option value="20">20 CHF/kg</option>
+                                <option value="25">25 CHF/kg</option>
+                                <option value="30">30 CHF/kg</option>
+                                <option value="40">40 CHF/kg</option>
+                                <option value="50">50 CHF/kg</option>
+                                <option value="60">60 CHF/kg</option>
+                                <option value="80">80 CHF/kg</option>
+                                <option value="100">100 CHF/kg</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -660,15 +670,7 @@
             "Elegoo Saturn 4 Ultra": {"tipo": "Resina", "prezzo": 500, "service": 100, "vita": 4000, "watt": 50}
         };
 
-        let materiali = {
-            "Creality PLA": {"tipo": "FDM", "prezzo": 20},
-            "Bambu PLA": {"tipo": "FDM", "prezzo": 22},
-            "eSUN PLA": {"tipo": "FDM", "prezzo": 16},
-            "eSUN PETG": {"tipo": "FDM", "prezzo": 20},
-            "Sunlu PLA": {"tipo": "FDM", "prezzo": 20},
-            "Sunlu PETG": {"tipo": "FDM", "prezzo": 22},
-            "Elegoo Resin": {"tipo": "Resina", "prezzo": 25}
-        };
+
 
         // Parametri configurabili
         let impostazioni = {
@@ -686,11 +688,10 @@
 
         // Carica impostazioni (remoto se configurato, altrimenti localStorage)
         function caricaImpostazioni() {
-            const defaults = { stampanti, materiali, impostazioni };
+            const defaults = { stampanti, impostazioni };
             if (window.SettingsStore && typeof window.SettingsStore.getSettings === 'function') {
                 window.SettingsStore.getSettings(defaults).then((data) => {
                     if (data.stampanti) stampanti = data.stampanti;
-                    if (data.materiali) materiali = data.materiali;
                     if (data.impostazioni) impostazioni = data.impostazioni;
                     aggiornaDisplaySconti();
                     aggiornaRiepilogoInfo();
@@ -704,7 +705,6 @@
                     if (saved) {
                         const data = JSON.parse(saved);
                         if (data.stampanti) stampanti = data.stampanti;
-                        if (data.materiali) materiali = data.materiali;
                         if (data.impostazioni) impostazioni = data.impostazioni;
                     }
                 } catch (e) {}
@@ -738,18 +738,8 @@
                 }
             });
 
-            // Aggiorna materiali
-            const selectMateriale = document.getElementById('materiale');
-            selectMateriale.innerHTML = '';
-            
-            Object.keys(materiali).forEach(nome => {
-                if (materiali[nome].tipo === tipo) {
-                    const option = document.createElement('option');
-                    option.value = nome;
-                    option.textContent = `${nome} (${materiali[nome].prezzo} CHF/${tipo === 'FDM' ? 'kg' : 'litro'})`;
-                    selectMateriale.appendChild(option);
-                }
-            });
+            // Per i materiali, manteniamo la selezione del prezzo fisso
+            // Non serve più aggiornare la lista dei materiali
         }
 
         function calcolaPrezzi() {
@@ -758,7 +748,7 @@
                 const result = calculateForQuantity(quantita);
                 
                 if (!result) {
-                    alert('Seleziona stampante e materiale');
+                    alert('Seleziona stampante e prezzo materiale');
                     return;
                 }
                 
@@ -970,14 +960,14 @@
                 const markupPerc = parseFloat(document.getElementById('markup').value);
                 
                 const stampanteNome = document.getElementById('stampante').value;
-                const materialeNome = document.getElementById('materiale').value;
+                const prezzoMateriale = parseFloat(document.getElementById('materiale').value);
                 
-                if (!stampanteNome || !materialeNome) {
+                if (!stampanteNome || !prezzoMateriale) {
                     return null;
                 }
                 
                 const stampanteDati = stampanti[stampanteNome];
-                const materialeDati = materiali[materialeNome];
+                const tipo = document.getElementById('tipoStampa').value;
                 
                 // Calcoli dei tempi
                 const oreTotaliStampa = tempoStampaOre;
@@ -986,7 +976,7 @@
                 const oreTotaliLavoro = oreTotaliPrep + oreTotaliPost;
                 
                 // Calcoli dei costi
-                const costoMateriale = (peso / 1000) * materialeDati.prezzo;
+                const costoMateriale = (peso / 1000) * prezzoMateriale;
                 const costoAmmortamento = (oreTotaliStampa / stampanteDati.vita) * (stampanteDati.prezzo + stampanteDati.service);
                 const watt = stampanteDati.watt || 100;
                 const costoElettricita = (oreTotaliStampa * watt / 1000) * impostazioni.costoElettricita;
@@ -1049,6 +1039,27 @@
                     calcolaPrezzi();
                 }
             }, 500);
+            
+            // Listener per aggiornamenti delle impostazioni dalla finestra settings
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'settings_updated') {
+                    console.log('Ricevuto aggiornamento impostazioni');
+                    
+                    // Aggiorna i dati locali
+                    if (event.data.settings.stampanti) stampanti = event.data.settings.stampanti;
+                    if (event.data.settings.impostazioni) impostazioni = event.data.settings.impostazioni;
+                    
+                    // Aggiorna l'interfaccia
+                    aggiornaOpzioni();
+                    aggiornaDisplaySconti();
+                    aggiornaRiepilogoInfo();
+                    
+                    // Ricalcola se ci sono dati validi
+                    if (document.getElementById('stampante').value && document.getElementById('materiale').value) {
+                        calcolaPrezzi();
+                    }
+                }
+            });
         });
 
         // Aggiorna il riepilogo con i valori dalle impostazioni
@@ -1140,14 +1151,14 @@
             doc.setFontSize(10);
             const tipoStampa = document.getElementById('tipoStampa').value;
             const stampante = document.getElementById('stampante').value;
-            const materiale = document.getElementById('materiale').value;
+            const prezzoMateriale = document.getElementById('materiale').value;
             const peso = document.getElementById('pesoMateriale').value;
             const tempoStampa = document.getElementById('tempoStampa').value;
             const markup = document.getElementById('markup').value;
 
             doc.text(`Tecnologia: ${tipoStampa}`, 20, 70);
             doc.text(`Stampante: ${stampante}`, 20, 78);
-            doc.text(`Materiale: ${materiale}`, 20, 86);
+            doc.text(`Prezzo Materiale: ${prezzoMateriale} CHF/kg`, 20, 86);
             doc.text(`Peso/Volume: ${peso} ${tipoStampa === 'FDM' ? 'g' : 'ml'}`, 20, 94);
             doc.text(`Tempo stampa: ${tempoStampa} ore`, 20, 102);
             doc.text(`Quantità: ${quantita} pezzi`, 20, 110);
@@ -1227,7 +1238,7 @@ CONFIGURAZIONE STAMPA
 ---------------------
 Tecnologia: ${tipoStampa}
 Stampante: ${stampante}
-Materiale: ${materiale}
+Prezzo Materiale: ${prezzoMateriale} CHF/kg
 Peso/Volume: ${peso} ${tipoStampa === 'FDM' ? 'g' : 'ml'}
 Tempo stampa: ${tempoStampa} ore
 Quantità: ${quantita} pezzi

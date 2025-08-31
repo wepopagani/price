@@ -291,19 +291,27 @@
             <div class="section">
                 <div class="section-header">Gestione Materiali</div>
                 <div class="section-content">
-                    <div class="subsection-header">Materiali Disponibili</div>
-                    <div id="materialiList"></div>
-                    
-                    <div class="add-form">
-                        <h4>Aggiungi Nuovo Materiale</h4>
-                        <input type="text" id="newMaterialName" placeholder="Nome materiale (es. PETG Premium)" style="width: 100%; margin-bottom: 10px;">
-                        <div style="display: flex; gap: 10px;">
-                            <select id="newMaterialType" style="flex: 1;">
-                                <option value="FDM">FDM</option>
-                                <option value="Resina">Resina</option>
-                            </select>
-                            <input type="number" id="newMaterialPrice" placeholder="Prezzo CHF/kg" style="flex: 1;" step="0.1" min="0">
-                            <button class="btn" onclick="aggiungiMateriale()">Aggiungi</button>
+                    <div class="subsection-header">Prezzi Materiali Predefiniti</div>
+                    <p style="margin-bottom: 15px; color: #666; font-size: 14px;">
+                        I prezzi dei materiali sono ora selezionabili direttamente nel calcolatore principale 
+                        da una lista predefinita: 15, 20, 25, 30, 40, 50, 60, 80, 100 CHF/kg.
+                    </p>
+                    <div style="background: #f8f9fa; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; text-align: center;">
+                        <h4 style="color: #333; margin-bottom: 10px;">🎯 Selezione Prezzi Materiali</h4>
+                        <p style="color: #666; margin-bottom: 15px;">
+                            Nel calcolatore principale, seleziona direttamente il prezzo al kg del materiale 
+                            che vuoi utilizzare per il calcolo.
+                        </p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; margin-top: 15px;">
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">15 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">20 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">25 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">30 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">40 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">50 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">60 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">80 CHF/kg</span>
+                            <span style="background: #f58220; color: white; padding: 8px; border-radius: 4px; font-weight: bold;">100 CHF/kg</span>
                         </div>
                     </div>
                 </div>
@@ -388,15 +396,6 @@
                 "Elegoo Mars 5 Ultra": {"tipo": "Resina", "prezzo": 400, "service": 50, "vita": 3500, "watt": 30},
                 "Elegoo Saturn 4 Ultra": {"tipo": "Resina", "prezzo": 500, "service": 100, "vita": 4000, "watt": 50}
             },
-            materiali: {
-                "Creality PLA": {"tipo": "FDM", "prezzo": 20},
-                "Bambu PLA": {"tipo": "FDM", "prezzo": 22},
-                "eSUN PLA": {"tipo": "FDM", "prezzo": 16},
-                "eSUN PETG": {"tipo": "FDM", "prezzo": 20},
-                "Sunlu PLA": {"tipo": "FDM", "prezzo": 20},
-                "Sunlu PETG": {"tipo": "FDM", "prezzo": 22},
-                "Elegoo Resin": {"tipo": "Resina", "prezzo": 25}
-            },
             impostazioni: {
                 failureRate: 10,
                 costoManodopera: 30,
@@ -427,36 +426,12 @@
 
         // Aggiorna l'interfaccia con i dati caricati
         function aggiornaInterfaccia() {
-            renderMateriali();
             renderStampanti();
             renderParametri();
             renderSconti();
         }
 
-        // Renderizza la lista dei materiali
-        function renderMateriali() {
-            const container = document.getElementById('materialiList');
-            container.innerHTML = '';
-            
-            Object.keys(settings.materiali).forEach(nome => {
-                const mat = settings.materiali[nome];
-                const div = document.createElement('div');
-                div.className = 'form-row';
-                div.innerHTML = `
-                    <label>${nome}</label>
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <span style="padding: 8px; background: #f0f0f0; border-radius: 4px; font-weight: bold;">
-                            ${mat.tipo}
-                        </span>
-                        <input type="number" value="${mat.prezzo}" step="0.1" min="0" 
-                               onchange="settings.materiali['${nome}'].prezzo = parseFloat(this.value)">
-                        <span>CHF/${mat.tipo === 'FDM' ? 'kg' : 'litro'}</span>
-                    </div>
-                    <button class="btn btn-danger" onclick="rimuoviMateriale('${nome}')">Rimuovi</button>
-                `;
-                container.appendChild(div);
-            });
-        }
+
 
         // Renderizza la lista delle stampanti
         function renderStampanti() {
@@ -516,30 +491,7 @@
             });
         }
 
-        // Funzioni per aggiungere elementi
-        function aggiungiMateriale() {
-            const nome = document.getElementById('newMaterialName').value.trim();
-            const tipo = document.getElementById('newMaterialType').value;
-            const prezzo = parseFloat(document.getElementById('newMaterialPrice').value);
-            
-            if (!nome || !prezzo || prezzo <= 0) {
-                alert('Inserisci nome e prezzo validi');
-                return;
-            }
-            
-            if (settings.materiali[nome]) {
-                alert('Materiale già esistente');
-                return;
-            }
-            
-            settings.materiali[nome] = { tipo, prezzo };
-            
-            // Reset form
-            document.getElementById('newMaterialName').value = '';
-            document.getElementById('newMaterialPrice').value = '';
-            
-            renderMateriali();
-        }
+
 
         function aggiungiStampante() {
             const nome = document.getElementById('newPrinterName').value.trim();
@@ -582,13 +534,7 @@
             renderSconti();
         }
 
-        // Funzioni per rimuovere elementi
-        function rimuoviMateriale(nome) {
-            if (confirm(`Rimuovere il materiale "${nome}"?`)) {
-                delete settings.materiali[nome];
-                renderMateriali();
-            }
-        }
+
 
         function rimuoviStampante(nome) {
             if (confirm(`Rimuovere la stampante "${nome}"?`)) {
@@ -614,14 +560,40 @@
             if (window.SettingsStore && typeof window.SettingsStore.saveSettings === 'function') {
                 window.SettingsStore.saveSettings(settings).then((res) => {
                     const where = res.remote ? 'server remoto' : 'browser';
-                    alert(`✅ Impostazioni salvate con successo nel ${where}!\n\nRicarica il calcolatore per vedere i cambiamenti.`);
+                    
+                    // Notifica la finestra principale del calcolatore
+                    try {
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.postMessage({
+                                type: 'settings_updated',
+                                settings: settings
+                            }, '*');
+                        }
+                    } catch (e) {
+                        console.log('Impossibile notificare la finestra principale');
+                    }
+                    
+                    alert(`✅ Impostazioni salvate con successo nel ${where}!\n\nIl calcolatore è stato aggiornato automaticamente.`);
                 }).catch(() => {
                     alert('❌ Errore nel salvataggio delle impostazioni');
                 });
             } else {
                 try {
                     localStorage.setItem('3dmakes_settings', JSON.stringify(settings));
-                    alert('✅ Impostazioni salvate con successo!\n\nRicarica il calcolatore per vedere i cambiamenti.');
+                    
+                    // Notifica la finestra principale del calcolatore
+                    try {
+                        if (window.opener && !window.opener.closed) {
+                            window.opener.postMessage({
+                                type: 'settings_updated',
+                                settings: settings
+                            }, '*');
+                        }
+                    } catch (e) {
+                        console.log('Impossibile notificare la finestra principale');
+                    }
+                    
+                    alert('✅ Impostazioni salvate con successo!\n\nIl calcolatore è stato aggiornato automaticamente.');
                 } catch (e) {
                     alert('❌ Errore nel salvataggio delle impostazioni');
                 }
