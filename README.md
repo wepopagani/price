@@ -67,7 +67,7 @@ Posiziona il tuo logo `logo.png` nella stessa cartella dell'applicazione per per
 - Costo materiale
 - Ammortamento stampante
 - Costo elettricità (0.30 CHF/kWh)
-- Manodopera (30 CHF/ora)
+- Manodopera (60 CHF/ora)
 - Failure rate (10%)
 - Markup personalizzabile
 
