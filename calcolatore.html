@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Prezzi Stampa 3D - 3DMAKES</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: black;
+            line-height: 1.4;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 2px solid #333;
+            background: white;
+        }
+
+        .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #4a90e2;
+            margin-right: 30px;
+        }
+
+        .main-title {
+            font-size: 1.5em;
+            color: #333;
+            font-weight: bold;
+            flex: 1;
+        }
+
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            border: 1px solid #ccc;
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            background: #333;
+            color: white;
+            padding: 12px 15px;
+            font-weight: bold;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .section-content {
+            padding: 25px 30px;
+            background: white;
+        }
+
+        .subsection-header {
+            background: #4a90e2;
+            color: white;
+            padding: 12px 20px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: -25px -30px 25px -30px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 22px;
+            gap: 20px;
+            padding: 5px 0;
+        }
+
+        .form-row label {
+            flex: 0 0 160px;
+            font-weight: 600;
+            color: black;
+            font-size: 15px;
+        }
+
+        .form-row select,
+        .form-row input {
+            flex: 1;
+            padding: 14px 16px;
+            border: 2px solid #333;
+            background: white;
+            font-size: 15px;
+            color: black;
+            border-radius: 6px;
+            min-height: 22px;
+        }
+
+        .form-row select:focus,
+        .form-row input:focus {
+            outline: 2px solid #4a90e2;
+            outline-offset: 1px;
+        }
+
+        .quantity-buttons {
+            display: flex;
+            gap: 12px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .qty-btn {
+            background: white;
+            color: black;
+            border: 2px solid #333;
+            padding: 14px 24px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-width: 55px;
+            border-radius: 6px;
+        }
+
+        .qty-btn:hover {
+            background: #4a90e2;
+            color: white;
+            border-color: #ffff;
+        }
+
+        .qty-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+
+        .calculate-section {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, #4a90e2, #4a90e2);
+            color: white;
+            border: 3px solid #ffff;
+            padding: 18px 50px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 12px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(46, 137, 190, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            border-color: #333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(46, 137, 190, 0.3);
+        }
+
+        .results-section {
+            grid-column: 1 / -1;
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+
+        .results-table th {
+            background: #333;
+            color: white;
+            padding: 15px 20px;
+            text-align: left;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .results-table td {
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .results-table .total-row {
+            background: #f8f9fa !important;
+            font-size: 16px;
+            border: 2px solid #333 !important;
+        }
+
+        .results-table .final-row {
+            background: #e8f5e8 !important;
+            font-size: 18px;
+            border: 3px solid #27ae60 !important;
+        }
+
+        .results-table .profit-row {
+            background: #fff3cd !important;
+            font-size: 16px;
+            border: 2px solid #ffc107 !important;
+        }
+
+        .results-table .unit-price-row {
+            background: #e7f3ff !important;
+            font-size: 16px;
+            border: 2px solid #4a90e2 !important;
+        }
+
+        .charts-section {
+            grid-column: 1 / -1;
+            display: none;
+            margin-top: 30px;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .chart-container {
+            border: 1px solid #ccc;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-height: 400px;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+
+        .chart-container canvas {
+            max-height: 350px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-track {
+            background: #ddd;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #4a90e2;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-track {
+            background: #ddd;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            background: #4a90e2;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            border: 2px solid #333;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">3DMAKES</div>
+            <div class="main-title">Calcolatore Prezzi</div>
+        </div>
+
+        <div class="content">
+            <!-- COLONNA SINISTRA -->
+            <div class="left-column">
+                <!-- Configurazione Stampa -->
+                <div class="section">
+                    <div class="section-header">Configurazione Stampa</div>
+                    <div class="section-content">
+                        <div class="subsection-header">Stampante</div>
+                        
+                        <div class="form-row">
+                            <label for="stampante">Modello:</label>
+                            <select id="stampante" onchange="aggiornaOpzioni(); calcolaPrezzi();">
+                                <option value="">Seleziona stampante...</option>
+                            </select>
+                        </div>
+
+                        <div class="subsection-header">Materiale</div>
+                        
+                        <div class="form-row">
+                            <label for="materiale">Tipo:</label>
+                            <select id="materiale" onchange="calcolaPrezzi();">
+                                <option value="">Seleziona materiale...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <label for="pesoMateriale">Peso (g):</label>
+                            <input type="number" id="pesoMateriale" value="120" min="1" onchange="calcolaPrezzi();">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parametri Produzione -->
+                <div class="section">
+                    <div class="section-header">Parametri Produzione</div>
+                    <div class="section-content">
+                        <div class="subsection-header">Quantità</div>
+                        
+                        <div class="form-row">
+                            <label for="quantita">Pezzi:</label>
+                            <input type="number" id="quantita" value="1" min="1" onchange="calcolaPrezzi();">
+                        </div>
+
+                        <div class="quantity-buttons">
+                            <button class="qty-btn active" onclick="setQuantity(1)">1</button>
+                            <button class="qty-btn" onclick="setQuantity(10)">10</button>
+                            <button class="qty-btn" onclick="setQuantity(20)">20</button>
+                            <button class="qty-btn" onclick="setQuantity(50)">50</button>
+                            <button class="qty-btn" onclick="setQuantity(100)">100</button>
+                        </div>
+
+                        <div style="margin-top: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: bold;">Sconti Quantità:</label>
+                            <div id="scontoDisplay" style="font-size: 13px; line-height: 1.4; color: #666;">
+                                <div>10 pz: <span id="sconto10">5%</span></div>
+                                <div>20 pz: <span id="sconto20">10%</span></div>
+                                <div>50 pz: <span id="sconto50">15%</span></div>
+                                <div>100 pz: <span id="sconto100">20%</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Materiali e Markup -->
+                <div class="section">
+                    <div class="section-header">Materiali e Markup</div>
+                    <div class="section-content">
+                        <div class="subsection-header">Prezzi</div>
+                        
+                        <div class="form-row">
+                            <label for="markup">Markup (%):</label>
+                            <input type="number" id="markup" value="30" min="0" step="1" onchange="calcolaPrezzi();">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- COLONNA DESTRA -->
+            <div class="right-column">
+                <!-- Tempi di Lavorazione -->
+                <div class="section">
+                    <div class="section-header">Tempi di Lavorazione</div>
+                    <div class="section-content">
+                        <div class="subsection-header">Stampa</div>
+                        
+                        <div class="form-row">
+                            <label for="tempoStampa">Tempo stampa (ore):</label>
+                            <input type="number" id="tempoStampa" value="2.5" min="0" step="0.5" placeholder="es. 2.5" onchange="calcolaPrezzi();">
+                        </div>
+
+                        <div class="subsection-header">Pre-Stampa</div>
+                        
+                        <div class="form-row">
+                            <label for="prePrepOre">Ore:</label>
+                            <input type="number" id="prePrepOre" value="0" min="0" step="0.5" onchange="calcolaPrezzi();">
+                        </div>
+
+                        <div class="form-row">
+                            <label for="prePrepMin">Minuti:</label>
+                            <input type="number" id="prePrepMin" value="10" min="0" max="59" onchange="calcolaPrezzi();">
+                        </div>
+
+                        <div class="subsection-header">Post-Stampa</div>
+                        
+                        <div class="form-row">
+                            <label for="postProcOre">Ore:</label>
+                            <input type="number" id="postProcOre" value="0" min="0" step="0.1" onchange="calcolaPrezzi();">
+                        </div>
+
+                        <div class="form-row">
+                            <label for="postProcMin">Minuti:</label>
+                            <input type="number" id="postProcMin" value="15" min="0" max="59" onchange="calcolaPrezzi();">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Riepilogo Rapido -->
+                <div class="section">
+                    <div class="section-header">Riepilogo Rapido</div>
+                    <div class="section-content">
+                        <div class="subsection-header">Info Calcolo</div>
+                        
+                        <div style="font-size: 15px; line-height: 1.8;" id="riepilogoInfo">
+                            <p style="margin-bottom: 12px;"><strong>Elettricità:</strong> 0.30 CHF/kWh</p>
+                            <p style="margin-bottom: 12px;"><strong>Manodopera:</strong> 65 CHF/ora</p>
+                            <p style="margin-bottom: 12px;"><strong>Failure Rate:</strong> 20%</p>
+                            <p style="margin-bottom: 12px;"><strong>Moneta:</strong> CHF</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Anteprima Prezzo -->
+                <div class="section">
+                    <div class="section-header">Anteprima Prezzo</div>
+                    <div class="section-content">
+                        <div class="subsection-header">Prezzo Finale</div>
+                        
+                        <div id="preview-price" style="text-align: center; padding: 20px; background: #f8f9fa; border: 2px solid #ddd; border-radius: 8px;">
+                            <div style="color: #2d5016; font-size: 32px; font-weight: bold; margin-bottom: 8px;">0.00 CHF</div>
+                            <div style="font-size: 16px; color: #666; font-weight: normal;">Calcola per vedere il prezzo</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PULSANTE CALCOLA -->
+            <div class="calculate-section">
+                <button class="calculate-btn" onclick="calcolaPrezzi()">
+                    🧮 CALCOLA PREZZO
+                </button>
+            </div>
+
+            <!-- RISULTATI -->
+            <div class="results-section" id="results">
+                <div class="section">
+                    <div class="section-header">Risultati Dettagliati</div>
+                    <div class="section-content">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Voce di Costo</th>
+                                    <th>Importo</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Costo Materiale</td>
+                                    <td id="costoMateriale">0.00 CHF</td>
+                                    <td>Peso × Prezzo/kg × Quantità</td>
+                                </tr>
+                                <tr>
+                                    <td>Ammortamento Stampante</td>
+                                    <td id="costoAmmortamento">0.00 CHF</td>
+                                    <td>Ore stampa / Vita × (Prezzo + Service)</td>
+                                </tr>
+                                <tr>
+                                    <td>Costo Elettricità</td>
+                                    <td id="costoElettricita">0.00 CHF</td>
+                                    <td>Ore × Watt × Tariffa elettrica</td>
+                                </tr>
+                                <tr>
+                                    <td>Costo Manodopera</td>
+                                    <td id="costoLavoro">0.00 CHF</td>
+                                    <td>Ore prep/post × Tariffa oraria</td>
+                                </tr>
+                                <tr class="total-row">
+                                    <td><strong>Totale Produzione</strong></td>
+                                    <td id="totaleProduzione"><strong>0.00 CHF</strong></td>
+                                    <td>Somma di tutti i costi base</td>
+                                </tr>
+                                <tr>
+                                    <td>Failure Rate</td>
+                                    <td id="failureCost">0.00 CHF</td>
+                                    <td>Copertura per stampe fallite</td>
+                                </tr>
+                                <tr class="profit-row">
+                                    <td><strong>Profitto</strong></td>
+                                    <td id="profitto"><strong>0.00 CHF</strong></td>
+                                    <td>Guadagno netto dopo tutti i costi</td>
+                                </tr>
+                                <tr class="final-row">
+                                    <td><strong>Prezzo Finale Totale</strong></td>
+                                    <td id="prezzoFinale"><strong>0.00 CHF</strong></td>
+                                    <td>Prezzo di vendita completo</td>
+                                </tr>
+                                <tr class="unit-price-row" id="unitPriceRow" style="display: none;">
+                                    <td><strong>Prezzo per Pezzo</strong></td>
+                                    <td id="prezzoUnitario"><strong>0.00 CHF</strong></td>
+                                    <td>Costo singolo elemento</td>
+                                </tr>
+                                <tr class="discount-row" id="discountRow" style="display: none; background: #ffe6cc !important; border: 2px solid #ff9500 !important;">
+                                    <td><strong>Sconto Quantità</strong></td>
+                                    <td id="scontoApplicatoValore"><strong>0.00 CHF</strong></td>
+                                    <td>Risparmio per grandi quantità</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GRAFICI -->
+            <div class="charts-section" id="charts">
+                <div class="section">
+                    <div class="section-header">Analisi Costi</div>
+                    <div class="section-content">
+                        <div class="charts-container">
+                            <div class="chart-container">
+                                <h3>Distribuzione Costi</h3>
+                                <canvas id="costChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <h3>Prezzo vs Quantità</h3>
+                                <canvas id="quantityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dati di default - verranno sovrascritti da localStorage se disponibili
+        let stampanti = {
+            "X1C": {"tipo": "FDM", "prezzo": 1500, "service": 200, "vita": 4000, "watt": 150},
+                "A1": {"tipo": "FDM", "prezzo": 500, "service": 150, "vita": 4000, "watt": 120},
+                "A1 Mini": {"tipo": "FDM", "prezzo": 350, "service": 1050, "vita": 4000, "watt": 80},
+                "Mars": {"tipo": "Resina", "prezzo": 400, "service": 50, "vita": 3500, "watt": 30},
+                "Saturn": {"tipo": "Resina", "prezzo": 500, "service": 100, "vita": 4000, "watt": 50}
+        };
+
+        let materiali = {
+            "PLA": {"tipo": "FDM", "prezzo": 20},
+            "PETG": {"tipo": "FDM", "prezzo": 25},
+            "ABS": {"tipo": "FDM", "prezzo": 30},
+            "Resina STD": {"tipo": "Resina", "prezzo": 30},
+            "Resina ABS": {"tipo": "Resina", "prezzo": 50}
+        };
+
+        // Parametri configurabili
+        let impostazioni = {
+            failureRate: 20,
+            costoManodopera: 65,
+            costoElettricita: 0.30,
+            scontiQuantita: {
+                1: 0,
+                10: 5,
+                20: 10,
+                50: 15,
+                100: 20
+            }
+        };
+
+        // Inizializza le impostazioni con valori predefiniti
+        function inizializzaImpostazioni() {
+            aggiornaDisplaySconti();
+        }
+
+        // Aggiorna la visualizzazione degli sconti
+        function aggiornaDisplaySconti() {
+            if (document.getElementById('sconto10')) {
+                document.getElementById('sconto10').textContent = impostazioni.scontiQuantita[10] + '%';
+                document.getElementById('sconto20').textContent = impostazioni.scontiQuantita[20] + '%';
+                document.getElementById('sconto50').textContent = impostazioni.scontiQuantita[50] + '%';
+                document.getElementById('sconto100').textContent = impostazioni.scontiQuantita[100] + '%';
+            }
+        }
+
+        function aggiornaOpzioni() {
+            const stampanteSelect = document.getElementById('stampante');
+            const materialeSelect = document.getElementById('materiale');
+            const stampanteSelezionata = stampanteSelect.value;
+            
+            // Aggiorna dropdown stampanti
+            stampanteSelect.innerHTML = '<option value="">Seleziona stampante...</option>';
+            Object.keys(stampanti).forEach(nome => {
+                const option = document.createElement('option');
+                option.value = nome;
+                option.textContent = nome;
+                stampanteSelect.appendChild(option);
+            });
+            
+            // Ripristina selezione se ancora valida
+            if (stampanteSelezionata && stampanti[stampanteSelezionata]) {
+                stampanteSelect.value = stampanteSelezionata;
+            }
+            
+            // Aggiorna dropdown materiali basato sul tipo di stampante
+            materialeSelect.innerHTML = '<option value="">Seleziona materiale...</option>';
+            
+            if (stampanteSelezionata && stampanti[stampanteSelezionata]) {
+                const tipoStampante = stampanti[stampanteSelezionata].tipo;
+                Object.keys(materiali).forEach(nome => {
+                    if (materiali[nome].tipo === tipoStampante) {
+                        const option = document.createElement('option');
+                        option.value = nome;
+                        option.textContent = nome;
+                        materialeSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        // Funzione per gestire i pulsanti quantità
+        function setQuantity(qty) {
+            document.getElementById('quantita').value = qty;
+            
+            // Aggiorna stile pulsanti
+            document.querySelectorAll('.qty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Ricalcola automaticamente
+            calcolaPrezzi();
+        }
+
+        // Funzione per ottenere lo sconto per una quantità specifica
+        function getScontoPerQuantita(quantita) {
+            // Cerca la quantità esatta o la più vicina (inferiore)
+            let scontoApplicabile = 0;
+            const quantitaDisponibili = Object.keys(impostazioni.scontiQuantita).map(Number).sort((a, b) => a - b);
+            
+            for (let qty of quantitaDisponibili) {
+                if (quantita >= qty) {
+                    scontoApplicabile = impostazioni.scontiQuantita[qty];
+                }
+            }
+            
+            return scontoApplicabile;
+        }
+
+        // Funzione per creare il grafico a torta dei costi
+        function createCostChart() {
+            const ctx = document.getElementById('costChart').getContext('2d');
+            
+            if (window.costChartInstance) {
+                window.costChartInstance.destroy();
+            }
+            
+            const quantita = parseInt(document.getElementById('quantita').value);
+            const result = calculateForQuantity(quantita);
+            
+            if (!result) return;
+            
+            window.costChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: ['Materiale', 'Ammortamento', 'Elettricità', 'Manodopera', 'Failure Rate'],
+                    datasets: [{
+                        data: [
+                            result.costoMateriale,
+                            result.costoAmmortamento,
+                            result.costoElettricita,
+                            result.costoLavoro,
+                            result.failureCost
+                        ],
+                        backgroundColor: [
+                            '#f58220',
+                            '#4a90e2',
+                            '#27ae60',
+                            '#e74c3c',
+                            '#9b59b6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Funzione per creare il grafico a barre delle quantità
+        function createQuantityChart() {
+            const ctx = document.getElementById('quantityChart').getContext('2d');
+            
+            if (window.quantityChartInstance) {
+                window.quantityChartInstance.destroy();
+            }
+            
+            const quantities = [1, 10, 20, 50, 100];
+            const prices = quantities.map(qty => {
+                const result = calculateForQuantity(qty);
+                return result ? result.prezzoUnitario : 0;
+            });
+            
+            window.quantityChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: quantities.map(q => q + ' pz'),
+                    datasets: [{
+                        label: 'Prezzo per pezzo (CHF)',
+                        data: prices,
+                        backgroundColor: '#f58220',
+                        borderColor: '#333',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // Funzione helper per calcolare i costi per una quantità specifica
+        function calculateForQuantity(quantita) {
+            try {
+                const tempoStampaOre = parseFloat(document.getElementById('tempoStampa').value);
+                const peso = parseFloat(document.getElementById('pesoMateriale').value);
+                const prePrepOre = parseFloat(document.getElementById('prePrepOre').value) || 0;
+                const prePrepMin = parseFloat(document.getElementById('prePrepMin').value) || 0;
+                const postProcOre = parseFloat(document.getElementById('postProcOre').value) || 0;
+                const postProcMin = parseFloat(document.getElementById('postProcMin').value) || 0;
+                const markupPerc = parseFloat(document.getElementById('markup').value);
+                
+                const stampanteNome = document.getElementById('stampante').value;
+                const materialeNome = document.getElementById('materiale').value;
+                
+                if (!stampanteNome || !materialeNome) {
+                    return null;
+                }
+                
+                const stampanteDati = stampanti[stampanteNome];
+                const materialeDati = materiali[materialeNome];
+                
+                // Calcoli dei tempi
+                const oreTotaliStampa = tempoStampaOre;
+                const oreTotaliPrep = prePrepOre + (prePrepMin / 60);
+                const oreTotaliPost = postProcOre + (postProcMin / 60);
+                const oreTotaliLavoro = oreTotaliPrep + oreTotaliPost;
+                
+                // Calcoli dei costi
+                const costoMateriale = (peso / 1000) * materialeDati.prezzo;
+                const costoAmmortamento = (oreTotaliStampa / stampanteDati.vita) * (stampanteDati.prezzo + stampanteDati.service);
+                const watt = stampanteDati.watt || 100;
+                const costoElettricita = (oreTotaliStampa * watt / 1000) * impostazioni.costoElettricita;
+                const costoLavoro = oreTotaliLavoro * impostazioni.costoManodopera;
+                
+                const totaleProduzionePezzo = costoMateriale + costoAmmortamento + costoElettricita + costoLavoro;
+                const failureCost = totaleProduzionePezzo * (impostazioni.failureRate / 100);
+                const totaleConFailure = totaleProduzionePezzo + failureCost;
+                
+                // Calcolo del prezzo con markup
+                let prezzoFinalePezzo = totaleConFailure * (1 + markupPerc / 100);
+                
+                // Applicazione dello sconto quantità
+                const scontoPercentuale = getScontoPerQuantita(quantita);
+                if (scontoPercentuale > 0) {
+                    prezzoFinalePezzo = prezzoFinalePezzo * (1 - scontoPercentuale / 100);
+                }
+                
+                const profittoPezzo = prezzoFinalePezzo - totaleConFailure;
+                
+                return {
+                    costoMateriale: costoMateriale * quantita,
+                    costoAmmortamento,
+                    costoElettricita,
+                    costoLavoro,
+                    totaleProduzionePezzo,
+                    failureCost,
+                    totaleConFailure,
+                    prezzoFinaleTotale: prezzoFinalePezzo * quantita,
+                    profittoTotale: profittoPezzo * quantita,
+                    prezzoUnitario: prezzoFinalePezzo,
+                    scontoApplicato: scontoPercentuale > 0 ? ((totaleConFailure * (1 + markupPerc / 100)) - prezzoFinalePezzo) : 0
+                };
+            } catch (error) {
+                return null;
+            }
+        }
+
+        // Funzione principale di calcolo
+        function calcolaPrezzi() {
+            const quantita = parseInt(document.getElementById('quantita').value);
+            
+            const result = calculateForQuantity(quantita);
+            
+
+            // Aggiorna tabella risultati
+            document.getElementById('costoMateriale').textContent = result.costoMateriale.toFixed(2) + ' CHF';
+            document.getElementById('costoAmmortamento').textContent = result.costoAmmortamento.toFixed(2) + ' CHF';
+            document.getElementById('costoElettricita').textContent = result.costoElettricita.toFixed(2) + ' CHF';
+            document.getElementById('costoLavoro').textContent = result.costoLavoro.toFixed(2) + ' CHF';
+            document.getElementById('totaleProduzione').innerHTML = `<strong>${result.totaleProduzionePezzo.toFixed(2)} CHF</strong>`;
+            document.getElementById('failureCost').textContent = result.failureCost.toFixed(2) + ' CHF';
+            document.getElementById('profitto').innerHTML = `<strong>${result.profittoTotale.toFixed(2)} CHF</strong>`;
+            document.getElementById('prezzoFinale').innerHTML = `<strong>${result.prezzoFinaleTotale.toFixed(2)} CHF</strong>`;
+
+            // Mostra/nascondi prezzo unitario se quantità > 1
+            const unitPriceRow = document.getElementById('unitPriceRow');
+            const discountRow = document.getElementById('discountRow');
+            
+            if (quantita > 1) {
+                document.getElementById('prezzoUnitario').innerHTML = `<strong>${result.prezzoUnitario.toFixed(2)} CHF</strong>`;
+                unitPriceRow.style.display = 'table-row';
+                
+                // Mostra sconto se applicato
+                if (result.scontoApplicato > 0) {
+                    document.getElementById('scontoApplicatoValore').innerHTML = `<strong>-${(result.scontoApplicato * quantita).toFixed(2)} CHF</strong>`;
+                    discountRow.style.display = 'table-row';
+                } else {
+                    discountRow.style.display = 'none';
+                }
+            } else {
+                unitPriceRow.style.display = 'none';
+                discountRow.style.display = 'none';
+            }
+
+            // Aggiorna anteprima prezzo
+            let scontoText = '';
+            if (quantita > 1 && result.scontoApplicato > 0) {
+                scontoText = `<div style="font-size: 12px; color: #ff9500; margin-top: 3px;">🎯 Sconto: -${(result.scontoApplicato * quantita).toFixed(2)} CHF</div>`;
+            }
+            
+            document.getElementById('preview-price').innerHTML = `
+                <div style="color: #2d5016; font-size: 32px; font-weight: bold; margin-bottom: 8px;">${result.prezzoFinaleTotale.toFixed(2)} CHF</div>
+                <div style="font-size: 16px; color: #666; font-weight: normal;">Prezzo totale per ${quantita} pz</div>
+                ${quantita > 1 ? `<div style="font-size: 14px; color: #f58220; margin-top: 5px;">${result.prezzoUnitario.toFixed(2)} CHF per pezzo</div>` : ''}
+                ${scontoText}
+            `;
+
+            // Mostra sezioni risultati e grafici
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('charts').style.display = 'block';
+
+            // Crea grafici
+            createCostChart();
+            createQuantityChart();
+        }
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            inizializzaImpostazioni();
+            aggiornaOpzioni();
+            aggiornaRiepilogoInfo();
+            // Calcolo automatico iniziale dopo un breve delay per assicurarsi che tutto sia caricato
+            setTimeout(function() {
+                if (document.getElementById('stampante').value && document.getElementById('materiale').value) {
+                    calcolaPrezzi();
+                }
+            }, 500);
+        });
+
+        // Aggiorna il riepilogo con i valori dalle impostazioni
+        function aggiornaRiepilogoInfo() {
+            const riepilogoHtml = `
+                <p style="margin-bottom: 12px;"><strong>Elettricità:</strong> ${impostazioni.costoElettricita.toFixed(2)} CHF/kWh</p>
+                <p style="margin-bottom: 12px;"><strong>Manodopera:</strong> ${impostazioni.costoManodopera} CHF/ora</p>
+                <p style="margin-bottom: 12px;"><strong>Failure Rate:</strong> ${impostazioni.failureRate}%</p>
+                <p style="margin-bottom: 12px;"><strong>Moneta:</strong> CHF</p>
+            `;
+            const riepilogoContainer = document.getElementById('riepilogoInfo');
+            if (riepilogoContainer) {
+                riepilogoContainer.innerHTML = riepilogoHtml;
+            }
+        }
+    </script>
+</body>
+</html>
+
