@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generatore Preventivi - 3DMAKES</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -616,11 +616,18 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
                     backgroundColor: '#ffffff'
                 });
 
-                // Crea il PDF
-                const jsPDF = window.jsPDF?.jsPDF || window.jsPDF;
-                if (!jsPDF) {
-                    throw new Error('jsPDF non disponibile');
+                // Crea il PDF - controlla diverse possibilità di caricamento
+                let jsPDF;
+                if (window.jspdf && window.jspdf.jsPDF) {
+                    jsPDF = window.jspdf.jsPDF;
+                } else if (window.jsPDF && window.jsPDF.jsPDF) {
+                    jsPDF = window.jsPDF.jsPDF;
+                } else if (window.jsPDF) {
+                    jsPDF = window.jsPDF;
+                } else {
+                    throw new Error('jsPDF non è caricato. Controlla la connessione internet.');
                 }
+                
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 
                 const imgWidth = 210; // A4 width in mm
@@ -642,15 +649,18 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
 
             } catch (error) {
                 console.error('Errore generazione PDF:', error);
-                let messaggioErrore = '❌ Errore durante la generazione del PDF.\n\n';
+                console.log('Disponibilità librerie:', {
+                    html2canvas: typeof html2canvas !== 'undefined',
+                    'window.jspdf': typeof window.jspdf !== 'undefined',
+                    'window.jsPDF': typeof window.jsPDF !== 'undefined'
+                });
                 
-                if (error.message && error.message.includes('html2canvas')) {
-                    messaggioErrore += 'Problema con html2canvas. Verifica la connessione internet.';
-                } else if (error.message && error.message.includes('jsPDF')) {
-                    messaggioErrore += 'Problema con jsPDF. Verifica la connessione internet.';
-                } else {
-                    messaggioErrore += error.message || 'Errore sconosciuto. Controlla la console (F12).';
-                }
+                let messaggioErrore = '❌ Errore durante la generazione del PDF.\n\n';
+                messaggioErrore += error.message || 'Errore sconosciuto.';
+                messaggioErrore += '\n\nProva a:';
+                messaggioErrore += '\n1. Ricaricare la pagina (CTRL+F5)';
+                messaggioErrore += '\n2. Verificare la connessione internet';
+                messaggioErrore += '\n3. Controllare la console (F12) per dettagli';
                 
                 alert(messaggioErrore);
                 btnPDF.textContent = textOriginale;
@@ -662,6 +672,15 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
         function stampa() {
             window.print();
         }
+
+        // Verifica caricamento librerie all'avvio
+        window.addEventListener('load', function() {
+            console.log('Librerie caricate:', {
+                html2canvas: typeof html2canvas !== 'undefined',
+                'window.jspdf': typeof window.jspdf !== 'undefined',
+                'window.jsPDF': typeof window.jsPDF !== 'undefined'
+            });
+        });
 
         // Inizializza
         renderEditor();
