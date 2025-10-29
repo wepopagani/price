@@ -49,6 +49,24 @@
             flex: 1;
         }
 
+        .settings-btn {
+            background: #f58220;
+            color: white;
+            border: 2px solid #f58220;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .settings-btn:hover {
+            background: #333;
+            border-color: #333;
+            transform: translateY(-1px);
+        }
+
 
         .content {
             display: grid;
@@ -322,6 +340,9 @@
         <div class="header">
             <div class="logo">3DMAKES</div>
             <div class="main-title">Calcolatore Prezzi</div>
+            <button class="settings-btn" onclick="window.open('genera-preventivo.html', '_blank')" style="margin-right: 10px; background: #27ae60; border-color: #27ae60;">
+                📄 Genera Preventivo
+            </button>
         </div>
 
         <div class="content">
@@ -391,11 +412,28 @@
                 <div class="section">
                     <div class="section-header">Materiali e Markup</div>
                     <div class="section-content">
-                        <div class="subsection-header">Prezzi</div>
+                        <div class="subsection-header">Calcolo Prezzo</div>
                         
                         <div class="form-row">
                             <label for="markup">Markup (%):</label>
-                            <input type="number" id="markup" value="30" min="0" step="1" onchange="calcolaPrezzi();">
+                            <input type="number" id="markup" value="30" min="0" step="1" oninput="calcolaConMarkup();">
+                        </div>
+
+                        <div style="text-align: center; margin: 15px 0; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+                            <div style="color: #666; font-size: 13px; margin-bottom: 5px;">→ Prezzo Calcolato</div>
+                            <div id="prezzoDaMarkup" style="font-size: 20px; font-weight: bold; color: #27ae60;">0.00 CHF</div>
+                        </div>
+
+                        <div class="subsection-header">oppure: Calcolo Markup Inverso</div>
+
+                        <div class="form-row">
+                            <label for="prezzoManuale">Prezzo Finale (CHF):</label>
+                            <input type="number" id="prezzoManuale" value="" min="0" step="0.01" placeholder="Inserisci prezzo" oninput="calcolaMarkupInverso();">
+                        </div>
+                        
+                        <div style="text-align: center; margin: 15px 0; padding: 10px; background: #fff3cd; border-radius: 5px; border: 2px solid #ffc107;">
+                            <div style="color: #666; font-size: 13px; margin-bottom: 5px;">→ Markup</div>
+                            <div id="markupCalcolato" style="font-size: 20px; font-weight: bold; color: #4a90e2;">- %</div>
                         </div>
                     </div>
                 </div>
@@ -667,6 +705,81 @@
             calcolaPrezzi();
         }
 
+        // Funzione per calcolare il prezzo dal markup
+        function calcolaConMarkup() {
+            try {
+                const quantita = parseInt(document.getElementById('quantita').value) || 1;
+                const result = calculateForQuantity(quantita);
+                
+                if (result) {
+                    document.getElementById('prezzoDaMarkup').textContent = result.prezzoFinaleTotale.toFixed(2) + ' CHF';
+                    
+                    // Aggiorna anche l'anteprima prezzo a destra
+                    let scontoText = '';
+                    if (quantita > 1 && result.scontoApplicato > 0) {
+                        scontoText = `<div style="font-size: 12px; color: #ff9500; margin-top: 3px;">🎯 Sconto: -${(result.scontoApplicato * quantita).toFixed(2)} CHF</div>`;
+                    }
+                    
+                    document.getElementById('preview-price').innerHTML = `
+                        <div style="color: #2d5016; font-size: 32px; font-weight: bold; margin-bottom: 8px;">${result.prezzoFinaleTotale.toFixed(2)} CHF</div>
+                        <div style="font-size: 16px; color: #666; font-weight: normal;">Prezzo totale per ${quantita} pz</div>
+                        ${quantita > 1 ? `<div style="font-size: 14px; color: #f58220; margin-top: 5px;">${result.prezzoUnitario.toFixed(2)} CHF per pezzo</div>` : ''}
+                        ${scontoText}
+                    `;
+                    
+                    // Pulisci il campo prezzo manuale quando si usa il markup
+                    document.getElementById('prezzoManuale').value = '';
+                    document.getElementById('markupCalcolato').textContent = '- %';
+                }
+            } catch (error) {
+                console.error('Errore nel calcolo:', error);
+            }
+        }
+
+        // Funzione per calcolare il markup inverso dal prezzo
+        function calcolaMarkupInverso() {
+            try {
+                const prezzoManuale = parseFloat(document.getElementById('prezzoManuale').value);
+                
+                if (!prezzoManuale || prezzoManuale <= 0) {
+                    document.getElementById('markupCalcolato').textContent = '- %';
+                    return;
+                }
+                
+                const quantita = parseInt(document.getElementById('quantita').value) || 1;
+                
+                // Calcola il costo base senza markup (usando markup 0%)
+                const markupOriginale = document.getElementById('markup').value;
+                document.getElementById('markup').value = '0';
+                const resultBase = calculateForQuantity(quantita);
+                document.getElementById('markup').value = markupOriginale;
+                
+                if (!resultBase) {
+                    document.getElementById('markupCalcolato').textContent = 'Errore';
+                    return;
+                }
+                
+                // Il costo totale con failure è il nostro costo base
+                const costoBase = resultBase.totaleConFailure * quantita;
+                
+                // Calcola il markup necessario: markup = ((prezzo / costo_base) - 1) * 100
+                const markupCalcolato = ((prezzoManuale / costoBase) - 1) * 100;
+                
+                if (markupCalcolato < 0) {
+                    document.getElementById('markupCalcolato').innerHTML = '<span style="color: red;">' + markupCalcolato.toFixed(2) + ' % ⚠️</span>';
+                } else {
+                    document.getElementById('markupCalcolato').textContent = markupCalcolato.toFixed(2) + ' %';
+                }
+                
+                // Aggiorna anche il display del prezzo calcolato
+                document.getElementById('prezzoDaMarkup').textContent = '0.00 CHF';
+                
+            } catch (error) {
+                console.error('Errore nel calcolo inverso:', error);
+                document.getElementById('markupCalcolato').textContent = 'Errore';
+            }
+        }
+
         // Funzione per ottenere lo sconto per una quantità specifica
         function getScontoPerQuantita(quantita) {
             // Cerca la quantità esatta o la più vicina (inferiore)
@@ -889,6 +1002,9 @@
             // Mostra sezioni risultati e grafici
             document.getElementById('results').style.display = 'block';
             document.getElementById('charts').style.display = 'block';
+
+            // Aggiorna anche il display del prezzo calcolato dal markup
+            document.getElementById('prezzoDaMarkup').textContent = result.prezzoFinaleTotale.toFixed(2) + ' CHF';
 
             // Crea grafici
             createCostChart();
