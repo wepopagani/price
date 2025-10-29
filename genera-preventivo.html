@@ -334,19 +334,6 @@
             </div>
 
             <div class="section-title">🏢 Dati Azienda</div>
-            
-            <div class="form-group">
-                <label>Logo Azienda:</label>
-                <input type="file" id="logoUpload" accept="image/*" onchange="caricaLogo(this)">
-                <div style="margin-top: 10px; font-size: 11px; color: #666;">
-                    oppure usa: logo.png nella cartella principale
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Nome Azienda:</label>
-                <input type="text" id="nomeAzienda" value="3DMAKES" oninput="aggiorna()">
-            </div>
 
             <div class="form-group">
                 <label>Indirizzo:</label>
@@ -398,8 +385,7 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
             <div class="preview" id="preventivo">
                 <div class="header">
                     <div class="company-info">
-                        <img src="logo.png" alt="Logo" class="company-logo" id="prev-logo" style="display: none;">
-                        <div class="company-name" id="prev-nomeAzienda">3DMAKES</div>
+                        <img src="logo.png" alt="3DMAKES Logo" class="company-logo" id="prev-logo">
                         <div class="company-details">
                             <div style="white-space: pre-line;" id="prev-indirizzoAzienda"></div>
                             <div style="white-space: pre-line; margin-top: 10px;" id="prev-contattiAzienda"></div>
@@ -483,44 +469,8 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
             }
         ];
 
-        // Variabile per il logo
-        let logoBase64 = null;
-
         // Inizializza la data di oggi
         document.getElementById('dataDoc').valueAsDate = new Date();
-
-        // Funzione per caricare il logo
-        function caricaLogo(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    logoBase64 = e.target.result;
-                    const logoImg = document.getElementById('prev-logo');
-                    logoImg.src = logoBase64;
-                    logoImg.style.display = 'block';
-                    // Nascondi il nome azienda testuale quando c'è il logo
-                    document.getElementById('prev-nomeAzienda').style.display = 'none';
-                };
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        // Tenta di caricare logo.png automaticamente
-        function tentaCaricamentoLogoDefault() {
-            const logoImg = document.getElementById('prev-logo');
-            const img = new Image();
-            img.onload = function() {
-                logoImg.style.display = 'block';
-                // Nascondi il nome azienda testuale quando c'è il logo
-                document.getElementById('prev-nomeAzienda').style.display = 'none';
-            };
-            img.onerror = function() {
-                // Se logo.png non esiste, mostra il nome testuale
-                logoImg.style.display = 'none';
-                document.getElementById('prev-nomeAzienda').style.display = 'block';
-            };
-            img.src = 'logo.png';
-        }
 
         // Funzione per aggiungere una nuova riga
         function aggiungiRiga() {
@@ -610,7 +560,6 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
         // Funzione per aggiornare il preview
         function aggiorna() {
             // Aggiorna info azienda
-            document.getElementById('prev-nomeAzienda').textContent = document.getElementById('nomeAzienda').value;
             document.getElementById('prev-indirizzoAzienda').textContent = document.getElementById('indirizzoAzienda').value;
             document.getElementById('prev-contattiAzienda').textContent = document.getElementById('contattiAzienda').value;
 
@@ -733,7 +682,6 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
         // Inizializza
         renderEditor();
         aggiorna();
-        tentaCaricamentoLogoDefault();
     </script>
 </body>
 </html>
