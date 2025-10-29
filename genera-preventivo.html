@@ -333,22 +333,6 @@
                 <input type="date" id="dataDoc" oninput="aggiorna()">
             </div>
 
-            <div class="section-title">🏢 Dati Azienda</div>
-
-            <div class="form-group">
-                <label>Indirizzo:</label>
-                <textarea id="indirizzoAzienda" oninput="aggiorna()">Via Industria
-Casella postale
-CH-6814 Lamone TI</textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Contatti:</label>
-                <textarea id="contattiAzienda" oninput="aggiorna()">Tel: 091 605 58 58
-Email: info@3dmakes.ch
-Web: www.3dmakes.ch</textarea>
-            </div>
-
             <div class="section-title">👤 Dati Cliente</div>
             <div class="form-group">
                 <label>Nome Cliente:</label>
@@ -559,9 +543,9 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
 
         // Funzione per aggiornare il preview
         function aggiorna() {
-            // Aggiorna info azienda
-            document.getElementById('prev-indirizzoAzienda').textContent = document.getElementById('indirizzoAzienda').value;
-            document.getElementById('prev-contattiAzienda').textContent = document.getElementById('contattiAzienda').value;
+            // Info azienda fisse
+            document.getElementById('prev-indirizzoAzienda').textContent = 'Via Cantonale 15\nCH-6918 Lugano';
+            document.getElementById('prev-contattiAzienda').textContent = 'Tel: 076 266 03 96\nEmail: info@3dmakes.ch\nWeb: www.3dmakes.ch';
 
             // Aggiorna info cliente
             document.getElementById('prev-nomeCliente').textContent = document.getElementById('nomeCliente').value;
