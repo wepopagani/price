@@ -510,14 +510,6 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
                 </table>
 
                 <div class="total-section">
-                    <div class="total-row">
-                        <strong>Subtotale:</strong>
-                        <span id="prev-subtotale">0.00 CHF</span>
-                    </div>
-                    <div class="total-row">
-                        <strong>IVA (8.1%):</strong>
-                        <span id="prev-iva">0.00 CHF</span>
-                    </div>
                     <div class="total-row final">
                         <strong>TOTALE:</strong>
                         <span id="prev-totale">0.00 CHF</span>
@@ -685,12 +677,9 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
                 tbody.appendChild(tr);
             });
 
-            // Calcola totali
-            const iva = subtotale * 0.081;
-            const totale = subtotale + iva;
+            // Calcola totali (senza IVA - regime forfettario)
+            const totale = subtotale;
 
-            document.getElementById('prev-subtotale').textContent = subtotale.toFixed(2) + ' CHF';
-            document.getElementById('prev-iva').textContent = iva.toFixed(2) + ' CHF';
             document.getElementById('prev-totale').textContent = totale.toFixed(2) + ' CHF';
         }
 

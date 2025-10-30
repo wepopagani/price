@@ -946,6 +946,46 @@
                 // Aggiorna anche il display del prezzo calcolato
                 document.getElementById('prezzoDaMarkup').textContent = '0.00 CHF';
                 
+                // AGGIORNA I DETTAGLI NELLA TABELLA
+                const prezzoUnitario = prezzoManuale / quantita;
+                const profittoTotale = prezzoManuale - costoBase;
+                
+                // Aggiorna tabella risultati con i dati del prezzo manuale
+                document.getElementById('costoMateriale').textContent = resultBase.costoMateriale.toFixed(2) + ' CHF';
+                document.getElementById('costoAmmortamento').textContent = resultBase.costoAmmortamento.toFixed(2) + ' CHF';
+                document.getElementById('costoElettricita').textContent = resultBase.costoElettricita.toFixed(2) + ' CHF';
+                document.getElementById('costoLavoro').textContent = resultBase.costoLavoro.toFixed(2) + ' CHF';
+                document.getElementById('totaleProduzione').innerHTML = `<strong>${resultBase.totaleProduzionePezzo.toFixed(2)} CHF</strong>`;
+                document.getElementById('failureCost').textContent = resultBase.failureCost.toFixed(2) + ' CHF';
+                document.getElementById('profitto').innerHTML = `<strong>${profittoTotale.toFixed(2)} CHF</strong>`;
+                document.getElementById('prezzoFinale').innerHTML = `<strong>${prezzoManuale.toFixed(2)} CHF</strong>`;
+
+                // Mostra/nascondi prezzo unitario se quantità > 1
+                const unitPriceRow = document.getElementById('unitPriceRow');
+                
+                if (quantita > 1) {
+                    document.getElementById('prezzoUnitario').innerHTML = `<strong>${prezzoUnitario.toFixed(2)} CHF</strong>`;
+                    unitPriceRow.style.display = 'table-row';
+                } else {
+                    unitPriceRow.style.display = 'none';
+                }
+
+                // Aggiorna anteprima prezzo a destra
+                document.getElementById('preview-price').innerHTML = `
+                    <div style="color: #2d5016; font-size: 32px; font-weight: bold; margin-bottom: 8px;">${prezzoManuale.toFixed(2)} CHF</div>
+                    <div style="font-size: 16px; color: #666; font-weight: normal;">Prezzo totale per ${quantita} pz</div>
+                    ${quantita > 1 ? `<div style="font-size: 14px; color: #f58220; margin-top: 5px;">${prezzoUnitario.toFixed(2)} CHF per pezzo</div>` : ''}
+                    <div style="font-size: 13px; color: #4a90e2; margin-top: 8px;">Markup applicato: ${markupCalcolato.toFixed(1)}%</div>
+                `;
+
+                // Mostra sezioni risultati e grafici
+                document.getElementById('results').style.display = 'block';
+                document.getElementById('charts').style.display = 'block';
+
+                // Crea grafici
+                createCostChart();
+                createQuantityChart();
+                
             } catch (error) {
                 console.error('Errore nel calcolo inverso:', error);
                 document.getElementById('markupCalcolato').textContent = 'Errore';
