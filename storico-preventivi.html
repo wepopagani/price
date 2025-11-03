@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storico Preventivi - 3DMAKES</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+        }
+
+        .header .logo {
+            color: #4a90e2;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: #f58220;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #d67019;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-card .number {
+            font-size: 36px;
+            font-weight: bold;
+            color: #f58220;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filters input,
+        .filters select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .table-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: #333;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: #f9f9f9;
+        }
+
+        .numero-preventivo {
+            font-weight: bold;
+            color: #4a90e2;
+            font-size: 16px;
+        }
+
+        .totale {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            font-size: 18px;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .error {
+            background: #ffe6e6;
+            border: 2px solid #ff4444;
+            color: #cc0000;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .righe-preview {
+            color: #666;
+            font-size: 12px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-year {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filters input,
+            .filters select {
+                width: 100%;
+            }
+
+            table {
+                font-size: 12px;
+            }
+
+            th, td {
+                padding: 8px 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div>
+                <div class="logo">3DMAKES</div>
+                <h1>📋 Storico Preventivi</h1>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <a href="genera-preventivo.html" class="btn">➕ Nuovo Preventivo</a>
+                <button class="btn btn-secondary" onclick="ricaricaDati()">🔄 Ricarica</button>
+            </div>
+        </div>
+
+        <!-- STATISTICHE -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="number" id="totalePrev">-</div>
+                <div class="label">Preventivi Totali</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totaleAnno">-</div>
+                <div class="label">Quest'Anno</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="totaleFatturato">-</div>
+                <div class="label">Totale Preventivato</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="ultimoNumero">-</div>
+                <div class="label">Ultimo Numero</div>
+            </div>
+        </div>
+
+        <!-- FILTRI -->
+        <div class="filters">
+            <label style="font-weight: bold;">Filtra per:</label>
+            <input type="text" id="filtroCliente" placeholder="🔍 Nome cliente" oninput="applicaFiltri()">
+            <input type="text" id="filtroNumero" placeholder="🔍 Numero preventivo" oninput="applicaFiltri()">
+            <select id="filtroAnno" onchange="applicaFiltri()">
+                <option value="">Tutti gli anni</option>
+            </select>
+            <select id="filtroOrdinamento" onchange="applicaFiltri()">
+                <option value="desc">Più recenti prima</option>
+                <option value="asc">Più vecchi prima</option>
+            </select>
+        </div>
+
+        <!-- TABELLA -->
+        <div class="table-container">
+            <div id="loading" class="loading">
+                ⏳ Caricamento preventivi...
+            </div>
+            <div id="error" class="error" style="display: none;"></div>
+            <div id="empty" class="empty" style="display: none;">
+                <div class="empty-icon">📭</div>
+                <h3>Nessun preventivo trovato</h3>
+                <p>I preventivi salvati appariranno qui.</p>
+                <br>
+                <a href="genera-preventivo.html" class="btn">Crea il tuo primo preventivo</a>
+            </div>
+            <div id="tableWrapper" style="display: none;">
+                <table id="preventiviTable">
+                    <thead>
+                        <tr>
+                            <th>N° Preventivo</th>
+                            <th>Data</th>
+                            <th>Cliente</th>
+                            <th>Righe</th>
+                            <th>Totale</th>
+                            <th>Creato il</th>
+                        </tr>
+                    </thead>
+                    <tbody id="preventiviBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURAZIONE FIREBASE
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAOpvFiXTvDuMKXEU1dymj_wYdhSmS6MFc",
+            authDomain: "preventivi-9fee1.firebaseapp.com",
+            projectId: "preventivi-9fee1",
+            storageBucket: "preventivi-9fee1.firebasestorage.app",
+            messagingSenderId: "381883404247",
+            appId: "1:381883404247:web:befceff98b2d21a1a70592"
+        };
+
+        let db = null;
+        let firebaseInitialized = false;
+        let tuttiIPreventivi = [];
+        let preventiviFiltrati = [];
+
+        // Inizializza Firebase
+        try {
+            if (firebaseConfig.apiKey !== "YOUR_API_KEY") {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                firebaseInitialized = true;
+                console.log('✅ Firebase inizializzato correttamente');
+                caricaPreventivi();
+            } else {
+                mostraErrore('Firebase non configurato. Inserisci le credenziali nel codice.');
+            }
+        } catch (error) {
+            console.error('❌ Errore inizializzazione Firebase:', error);
+            mostraErrore('Errore inizializzazione Firebase: ' + error.message);
+        }
+
+        // ============================================
+        // CARICAMENTO DATI
+        // ============================================
+
+        async function caricaPreventivi() {
+            if (!firebaseInitialized) {
+                mostraErrore('Firebase non inizializzato');
+                return;
+            }
+
+            try {
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('error').style.display = 'none';
+                document.getElementById('empty').style.display = 'none';
+                document.getElementById('tableWrapper').style.display = 'none';
+
+                // Carica tutti i preventivi ordinati per data di creazione
+                const snapshot = await db.collection('preventivi')
+                    .orderBy('createdAt', 'desc')
+                    .get();
+
+                tuttiIPreventivi = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    tuttiIPreventivi.push({
+                        id: doc.id,
+                        ...data,
+                        createdAt: data.createdAt ? data.createdAt.toDate() : new Date()
+                    });
+                });
+
+                console.log(`✅ Caricati ${tuttiIPreventivi.length} preventivi`);
+                
+                // Popola il filtro degli anni
+                popolaFiltroAnni();
+                
+                // Calcola e mostra statistiche
+                calcolaStatistiche();
+                
+                // Applica filtri e mostra tabella
+                applicaFiltri();
+
+            } catch (error) {
+                console.error('❌ Errore caricamento preventivi:', error);
+                mostraErrore('Errore caricamento preventivi: ' + error.message);
+            }
+        }
+
+        function popolaFiltroAnni() {
+            const anni = [...new Set(tuttiIPreventivi.map(p => {
+                const match = p.numeroOfferta?.match(/^(\d{4})\//);
+                return match ? match[1] : null;
+            }).filter(Boolean))].sort().reverse();
+
+            const select = document.getElementById('filtroAnno');
+            select.innerHTML = '<option value="">Tutti gli anni</option>';
+            anni.forEach(anno => {
+                const option = document.createElement('option');
+                option.value = anno;
+                option.textContent = anno;
+                select.appendChild(option);
+            });
+        }
+
+        function calcolaStatistiche() {
+            const annoCorrente = new Date().getFullYear();
+            
+            const totalePrev = tuttiIPreventivi.length;
+            const totaleAnno = tuttiIPreventivi.filter(p => 
+                p.numeroOfferta?.startsWith(annoCorrente + '/')
+            ).length;
+            
+            const totaleFatturato = tuttiIPreventivi.reduce((sum, p) => 
+                sum + (parseFloat(p.totale) || 0), 0
+            );
+            
+            const ultimoNumero = tuttiIPreventivi.length > 0 
+                ? tuttiIPreventivi[0].numeroOfferta 
+                : 'N/A';
+
+            document.getElementById('totalePrev').textContent = totalePrev;
+            document.getElementById('totaleAnno').textContent = totaleAnno;
+            document.getElementById('totaleFatturato').textContent = 
+                totaleFatturato.toFixed(2) + ' CHF';
+            document.getElementById('ultimoNumero').textContent = ultimoNumero;
+        }
+
+        // ============================================
+        // FILTRI E VISUALIZZAZIONE
+        // ============================================
+
+        function applicaFiltri() {
+            const filtroCliente = document.getElementById('filtroCliente').value.toLowerCase();
+            const filtroNumero = document.getElementById('filtroNumero').value.toLowerCase();
+            const filtroAnno = document.getElementById('filtroAnno').value;
+            const ordinamento = document.getElementById('filtroOrdinamento').value;
+
+            // Applica filtri
+            preventiviFiltrati = tuttiIPreventivi.filter(p => {
+                const matchCliente = !filtroCliente || 
+                    p.cliente?.nome?.toLowerCase().includes(filtroCliente);
+                const matchNumero = !filtroNumero || 
+                    p.numeroOfferta?.toLowerCase().includes(filtroNumero);
+                const matchAnno = !filtroAnno || 
+                    p.numeroOfferta?.startsWith(filtroAnno + '/');
+                
+                return matchCliente && matchNumero && matchAnno;
+            });
+
+            // Applica ordinamento
+            if (ordinamento === 'asc') {
+                preventiviFiltrati.sort((a, b) => a.createdAt - b.createdAt);
+            } else {
+                preventiviFiltrati.sort((a, b) => b.createdAt - a.createdAt);
+            }
+
+            // Mostra risultati
+            mostraTabella();
+        }
+
+        function mostraTabella() {
+            document.getElementById('loading').style.display = 'none';
+            
+            if (preventiviFiltrati.length === 0) {
+                document.getElementById('empty').style.display = 'block';
+                document.getElementById('tableWrapper').style.display = 'none';
+                return;
+            }
+
+            document.getElementById('empty').style.display = 'none';
+            document.getElementById('tableWrapper').style.display = 'block';
+
+            const tbody = document.getElementById('preventiviBody');
+            tbody.innerHTML = '';
+
+            preventiviFiltrati.forEach(prev => {
+                const tr = document.createElement('tr');
+                
+                // Estrai anno dal numero preventivo
+                const annoMatch = prev.numeroOfferta?.match(/^(\d{4})\//);
+                const anno = annoMatch ? annoMatch[1] : '';
+                
+                // Formatta data
+                const dataFormatted = prev.data 
+                    ? new Date(prev.data).toLocaleDateString('it-IT')
+                    : '-';
+                
+                // Formatta data creazione
+                const creatoFormatted = prev.createdAt
+                    ? prev.createdAt.toLocaleString('it-IT')
+                    : '-';
+                
+                // Preview righe
+                const numRighe = prev.righe?.length || 0;
+                const primaRiga = prev.righe?.[0]?.descrizione?.split('\n')[0] || '';
+                const righePreview = numRighe > 1 
+                    ? `${numRighe} articoli (${primaRiga}...)`
+                    : primaRiga;
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="numero-preventivo">${prev.numeroOfferta || 'N/A'}</div>
+                        ${anno ? `<span class="badge badge-year">${anno}</span>` : ''}
+                    </td>
+                    <td>${dataFormatted}</td>
+                    <td>
+                        <strong>${prev.cliente?.nome || 'N/A'}</strong><br>
+                        <small style="color: #666;">${(prev.cliente?.indirizzo || '').split('\n')[0]}</small>
+                    </td>
+                    <td>
+                        <div class="righe-preview" title="${righePreview}">
+                            ${righePreview}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="totale">${(prev.totale || 0).toFixed(2)} ${prev.valuta || 'CHF'}</div>
+                    </td>
+                    <td>
+                        <small>${creatoFormatted}</small>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ============================================
+        // UTILITY
+        // ============================================
+
+        function mostraErrore(messaggio) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').textContent = '❌ ' + messaggio;
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('tableWrapper').style.display = 'none';
+        }
+
+        function ricaricaDati() {
+            tuttiIPreventivi = [];
+            preventiviFiltrati = [];
+            caricaPreventivi();
+        }
+    </script>
+</body>
+</html>
+
