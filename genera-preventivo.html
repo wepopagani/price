@@ -434,7 +434,7 @@
             <div class="form-group">
                 <label>Numero Offerta:</label>
                 <input type="text" id="numeroOfferta" value="Caricamento..." oninput="aggiorna()" readonly style="background: #f0f0f0;">
-                <small style="color: #666; font-size: 11px; margin-top: 5px; display: block;">
+                <small id="infoNumeroOfferta" style="color: #666; font-size: 11px; margin-top: 5px; display: block;">
                     ⚡ Numero generato automaticamente e sequenziale
                 </small>
             </div>
@@ -470,7 +470,8 @@ Termine: 15 giorni lavorativi dall'ordinazione
 Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
             </div>
 
-            <button class="btn btn-success" onclick="scaricaPDF()">📥 Scarica PDF</button>
+            <button class="btn btn-success" id="btnSalva" onclick="salvaPreventivo()">💾 Salva Modifiche</button>
+            <button class="btn" onclick="scaricaPDF()">📥 Scarica PDF</button>
             <button class="btn" onclick="stampa()">🖨️ Stampa</button>
             <a href="storico-preventivi.html" class="btn" style="text-align: center; text-decoration: none; display: block; background: #3498db;">📋 Storico Preventivi</a>
         </div>
@@ -552,6 +553,8 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
 
         let db = null;
         let firebaseInitialized = false;
+        let preventivoInModifica = null; // ID del preventivo in modifica (se esiste)
+        let modalitaModifica = false; // Flag per sapere se siamo in modifica
 
         // Inizializza Firebase
         try {
@@ -619,24 +622,61 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
             }
         }
 
-        // Salva il preventivo in Firestore
-        async function salvaPreventivoFirestore(datiPreventivo) {
+        // Salva il preventivo in Firestore (nuovo o aggiornamento)
+        async function salvaPreventivoFirestore(datiPreventivo, idPreventivo = null) {
             if (!firebaseInitialized) {
                 console.warn('Firebase non inizializzato, salvataggio saltato');
                 return null;
             }
 
             try {
-                const docRef = await db.collection('preventivi').add({
-                    ...datiPreventivo,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                console.log('✅ Preventivo salvato con ID:', docRef.id);
-                return docRef.id;
+                if (idPreventivo) {
+                    // Aggiorna preventivo esistente
+                    await db.collection('preventivi').doc(idPreventivo).update({
+                        ...datiPreventivo,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    console.log('✅ Preventivo aggiornato con ID:', idPreventivo);
+                    return idPreventivo;
+                } else {
+                    // Crea nuovo preventivo
+                    const docRef = await db.collection('preventivi').add({
+                        ...datiPreventivo,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    console.log('✅ Preventivo salvato con ID:', docRef.id);
+                    return docRef.id;
+                }
             } catch (error) {
                 console.error('❌ Errore salvataggio preventivo:', error);
+                throw error;
+            }
+        }
+
+        // Carica un preventivo esistente da Firestore
+        async function caricaPreventivoEsistente(idPreventivo) {
+            if (!firebaseInitialized) {
+                console.warn('Firebase non inizializzato');
+                return null;
+            }
+
+            try {
+                const doc = await db.collection('preventivi').doc(idPreventivo).get();
+                
+                if (!doc.exists) {
+                    console.error('Preventivo non trovato');
+                    return null;
+                }
+
+                const data = doc.data();
+                console.log('✅ Preventivo caricato:', data);
+                return {
+                    id: doc.id,
+                    ...data
+                };
+            } catch (error) {
+                console.error('❌ Errore caricamento preventivo:', error);
                 throw error;
             }
         }
@@ -682,6 +722,72 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
                 const anno = new Date().getFullYear();
                 document.getElementById('numeroOfferta').value = `${anno}/001`;
                 aggiorna();
+            }
+        }
+
+        // Carica i dati di un preventivo esistente nell'editor
+        async function caricaDatiPreventivo(idPreventivo) {
+            try {
+                const preventivo = await caricaPreventivoEsistente(idPreventivo);
+                
+                if (!preventivo) {
+                    alert('Preventivo non trovato!');
+                    window.location.href = 'genera-preventivo.html';
+                    return;
+                }
+
+                // Imposta modalità modifica
+                preventivoInModifica = idPreventivo;
+                modalitaModifica = true;
+
+                // Carica i dati nel form
+                document.getElementById('numeroOfferta').value = preventivo.numeroOfferta || '';
+                document.getElementById('dataDoc').value = preventivo.data || '';
+                document.getElementById('nomeCliente').value = preventivo.cliente?.nome || '';
+                document.getElementById('indirizzoCliente').value = preventivo.cliente?.indirizzo || '';
+                document.getElementById('note').value = preventivo.note || '';
+
+                // Carica le righe
+                if (preventivo.righe && preventivo.righe.length > 0) {
+                    righe = preventivo.righe.map(r => ({
+                        articolo: r.articolo || '',
+                        descrizione: r.descrizione || '',
+                        quantita: r.quantita || 1,
+                        prezzoUnit: r.prezzoUnit || 0,
+                        sconto: r.sconto || 0
+                    }));
+                }
+
+                // Aggiorna UI per modalità modifica
+                document.getElementById('infoNumeroOfferta').innerHTML = 
+                    '✏️ <strong style="color: #f58220;">Modalità Modifica</strong> - Stai modificando un preventivo esistente';
+                document.getElementById('btnSalva').style.display = 'block';
+
+                // Render e aggiorna
+                renderEditor();
+                aggiorna();
+
+                console.log('✅ Preventivo caricato in modifica');
+            } catch (error) {
+                console.error('❌ Errore caricamento preventivo:', error);
+                alert('Errore durante il caricamento del preventivo: ' + error.message);
+                window.location.href = 'genera-preventivo.html';
+            }
+        }
+
+        // Verifica se siamo in modalità modifica all'avvio
+        function verificaModalitaModifica() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const editId = urlParams.get('edit');
+            
+            if (editId) {
+                // Siamo in modalità modifica
+                document.getElementById('btnSalva').style.display = 'block';
+                caricaDatiPreventivo(editId);
+            } else {
+                // Siamo in modalità nuovo preventivo
+                document.getElementById('btnSalva').style.display = 'none';
+                caricaProssimoNumeroPreventivo();
             }
         }
 
@@ -859,6 +965,42 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
             document.getElementById('prev-totale').textContent = totale.toFixed(2) + ' CHF';
         }
 
+        // Funzione per salvare le modifiche al preventivo
+        async function salvaPreventivo() {
+            if (!modalitaModifica || !preventivoInModifica) {
+                alert('Errore: non siamo in modalità modifica');
+                return;
+            }
+
+            const btnSalva = document.getElementById('btnSalva');
+            const textOriginale = btnSalva.textContent;
+            btnSalva.textContent = '⏳ Salvataggio...';
+            btnSalva.disabled = true;
+
+            try {
+                const datiPreventivo = preparaDatiPreventivo();
+                await salvaPreventivoFirestore(datiPreventivo, preventivoInModifica);
+                
+                btnSalva.textContent = '✅ Salvato!';
+                
+                setTimeout(() => {
+                    btnSalva.textContent = textOriginale;
+                    btnSalva.disabled = false;
+                    
+                    // Chiedi se vuole tornare allo storico
+                    if (confirm('Preventivo salvato con successo! Vuoi tornare allo storico?')) {
+                        window.location.href = 'storico-preventivi.html';
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Errore salvataggio:', error);
+                alert('Errore durante il salvataggio: ' + error.message);
+                btnSalva.textContent = textOriginale;
+                btnSalva.disabled = false;
+            }
+        }
+
         // Funzione per scaricare PDF
         async function scaricaPDF() {
             const preventivo = document.getElementById('preventivo');
@@ -908,22 +1050,36 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
                 const nomeFile = `Preventivo_${numeroOfferta}_${new Date().toISOString().split('T')[0]}.pdf`;
                 pdf.save(nomeFile);
 
-                btnPDF.textContent = '💾 Salvataggio in Firestore...';
-
-                // Salva il preventivo in Firestore
-                try {
-                    const datiPreventivo = preparaDatiPreventivo();
-                    const docId = await salvaPreventivoFirestore(datiPreventivo);
+                // Se siamo in modalità modifica, salva solo le modifiche senza creare un nuovo preventivo
+                if (modalitaModifica && preventivoInModifica) {
+                    btnPDF.textContent = '💾 Aggiornamento Firestore...';
                     
-                    if (docId) {
-                        btnPDF.textContent = '✅ PDF Scaricato e Salvato!';
-                        console.log('Preventivo salvato con successo in Firestore');
-                    } else {
-                        btnPDF.textContent = '✅ PDF Scaricato (Firebase non configurato)';
+                    try {
+                        const datiPreventivo = preparaDatiPreventivo();
+                        await salvaPreventivoFirestore(datiPreventivo, preventivoInModifica);
+                        btnPDF.textContent = '✅ PDF Scaricato e Aggiornato!';
+                    } catch (firestoreError) {
+                        console.error('Errore aggiornamento Firestore:', firestoreError);
+                        btnPDF.textContent = '⚠️ PDF Scaricato (Errore aggiornamento DB)';
                     }
-                } catch (firestoreError) {
-                    console.error('Errore salvataggio Firestore:', firestoreError);
-                    btnPDF.textContent = '⚠️ PDF Scaricato (Errore salvataggio DB)';
+                } else {
+                    // Modalità nuovo preventivo - salva come nuovo
+                    btnPDF.textContent = '💾 Salvataggio in Firestore...';
+
+                    try {
+                        const datiPreventivo = preparaDatiPreventivo();
+                        const docId = await salvaPreventivoFirestore(datiPreventivo);
+                        
+                        if (docId) {
+                            btnPDF.textContent = '✅ PDF Scaricato e Salvato!';
+                            console.log('Preventivo salvato con successo in Firestore');
+                        } else {
+                            btnPDF.textContent = '✅ PDF Scaricato (Firebase non configurato)';
+                        }
+                    } catch (firestoreError) {
+                        console.error('Errore salvataggio Firestore:', firestoreError);
+                        btnPDF.textContent = '⚠️ PDF Scaricato (Errore salvataggio DB)';
+                    }
                 }
 
                 setTimeout(() => {
@@ -966,8 +1122,8 @@ Pagamento: 30 giorni netto dalla ricezione della merce</textarea>
                 firebase: typeof firebase !== 'undefined'
             });
             
-            // Carica automaticamente il prossimo numero preventivo
-            caricaProssimoNumeroPreventivo();
+            // Verifica se siamo in modalità modifica o nuovo preventivo
+            verificaModalitaModifica();
         });
 
         // Inizializza
